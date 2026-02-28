@@ -596,7 +596,7 @@ func draw_pattern(terrain: MarchingSquaresTerrain):
 				var b_start := Vector2(bridge_start_pos.x, bridge_start_pos.z)
 				var bridge_length := (b_end - b_start).length()
 				if bridge_length < 0.5 or draw_chunk_dict.size() < 3: # Skip small bridges so the terrain doesn't glitch
-					continue
+					return
 				
 				# Convert cell to world-space
 				var global_cell := Vector2(
@@ -604,9 +604,9 @@ func draw_pattern(terrain: MarchingSquaresTerrain):
 					(draw_chunk_coords.y * terrain.dimensions.z + draw_cell_coords.y) * terrain.cell_size.y)
 				
 				if draw_chunk_coords != first_chunk:
-					global_cell.x += (first_chunk.x - draw_chunk_coords.x) * 2
+					global_cell.x += (first_chunk.x - draw_chunk_coords.x) * terrain.cell_size.x
 				if draw_chunk_coords != first_chunk:
-					global_cell.y += (first_chunk.y - draw_chunk_coords.y) * 2
+					global_cell.y += (first_chunk.y - draw_chunk_coords.y) * terrain.cell_size.y
 				
 				# Calculate the 2D bridge direction vector
 				var bridge_dir := (b_end - b_start) / bridge_length
