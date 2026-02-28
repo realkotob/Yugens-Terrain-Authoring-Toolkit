@@ -572,25 +572,43 @@ func draw_pattern(terrain: MarchingSquaresTerrain):
 				draw_value = lerp(restore_value, height, sample)
 			elif mode == TerrainToolMode.SMOOTH:
 				var heights : Array[float] = []
+				var global_cells : Array[Vector2i] = []
 				
-				for dc in draw_chunk_dict.keys():
-					var _chunk = terrain.chunks[draw_chunk_coords]
-					heights.append(_chunk.get_height(dc))
+				for chunk_coords in current_draw_pattern.keys():
+					var chunk_dict = current_draw_pattern[chunk_coords]
+					for cell_coords in chunk_dict.keys():
+						var global_x = chunk_coords.x * terrain.dimensions.x + cell_coords.x
+						var global_y = chunk_coords.y * terrain.dimensions.z + cell_coords.y
+						global_cells.append(Vector2i(global_x, global_y))
+				
+				for global_cell in global_cells:
+					var current_chunk_coords = Vector2i(global_cell.x / terrain.dimensions.x, global_cell.y / terrain.dimensions.z)
+					var current_chunk = terrain.chunks[current_chunk_coords]
+					var local_cell = Vector2i(global_cell.x % terrain.dimensions.x, global_cell.y % terrain.dimensions.z)
+					heights.append(current_chunk.get_height(local_cell))
 				
 				var avg_height := 0.0
 				for h in heights:
 					avg_height += h
 				avg_height /= heights.size()
 				
-				for dc in draw_chunk_dict.keys():
-					var _chunk = terrain.chunks[draw_chunk_coords]
-					restore_value = _chunk.get_height(dc)
+				for global_cell in global_cells:
+					var current_chunk_coords = Vector2i(global_cell.x / terrain.dimensions.x, global_cell.y / terrain.dimensions.z)
+					var current_chunk = terrain.chunks[current_chunk_coords]
+					var local_cell = Vector2i(global_cell.x % terrain.dimensions.x, global_cell.y % terrain.dimensions.z)
 					
-					var f = sample * strength
-					draw_value = lerp(restore_value, avg_height, f)
+					if not restore_pattern.has(current_chunk_coords):
+						restore_pattern[current_chunk_coords] = {}
+					if not pattern.has(current_chunk_coords):
+						pattern[current_chunk_coords] = {}
 					
-					restore_pattern[draw_chunk_coords][dc] = restore_value
-					pattern[draw_chunk_coords][dc] = draw_value
+					# Overwrite sample var with neighbouring chunks' data included
+					sample = clamp(current_draw_pattern.get(current_chunk_coords, {}).get(local_cell, sample), 0.001, 0.999)
+					restore_value = current_chunk.get_height(local_cell)
+					draw_value = lerp(restore_value, avg_height, sample * strength)
+					
+					restore_pattern[current_chunk_coords][local_cell] = restore_value
+					pattern[current_chunk_coords][local_cell] = draw_value
 			elif mode == TerrainToolMode.BRIDGE:
 				var b_end := Vector2(brush_position.x, brush_position.z)
 				var b_start := Vector2(bridge_start_pos.x, bridge_start_pos.z)
