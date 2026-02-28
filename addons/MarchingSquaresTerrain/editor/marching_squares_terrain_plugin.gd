@@ -23,6 +23,8 @@ var initialization_error : String = ""
 
 var current_terrain_node : MarchingSquaresTerrain
 
+var selected_chunk : MarchingSquaresTerrainChunk
+
 # Flag to prevent _set_new_textures() when syncing preset from terrain node
 var _syncing_from_terrain : bool = false
 
@@ -463,8 +465,14 @@ func handle_mouse(camera: Camera3D, event: InputEvent) -> int:
 		
 		# On click, add or remove chunk if in chunk_management mode
 		if mode == TerrainToolMode.CHUNK_MANAGEMENT and event is InputEventMouseButton and event.is_pressed() and event.button_index == MouseButton.MOUSE_BUTTON_LEFT:
+			# Select chunk
+			if Input.is_key_pressed(KEY_CTRL):
+				selected_chunk = terrain.chunks.get(current_hovered_chunk)
+				ui.tool_attributes.show_tool_attributes(TerrainToolMode.CHUNK_MANAGEMENT)
+				ui.tool_attributes.selected_chunk = selected_chunk
+			
 			# Remove chunk
-			if chunk:
+			elif chunk:
 				var removed_chunk = terrain.chunks[chunk_coords]
 				get_undo_redo().create_action("remove chunk")
 				get_undo_redo().add_do_method(terrain, "remove_chunk_from_tree", chunk_x, chunk_z)
@@ -488,7 +496,7 @@ func handle_mouse(camera: Camera3D, event: InputEvent) -> int:
 	else:
 		is_chunk_plane_hovered = false
 	
-	# Consume clicks but allow other click / mouse motion types to reach the gui, for camera movement, etc	
+	# Consume clicks but allow other click / mouse motion types to reach the gui, for camera movement, etc
 	if event is InputEventMouseButton and event.is_pressed() and event.button_index == MouseButton.MOUSE_BUTTON_LEFT:
 		return EditorPlugin.AFTER_GUI_INPUT_STOP
 	

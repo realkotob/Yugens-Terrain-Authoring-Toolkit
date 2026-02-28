@@ -45,6 +45,7 @@ var settings : Dictionary = {}
 
 var last_setting_type : SettingType = SettingType.ERROR
 var selected_chunk : MarchingSquaresTerrainChunk
+var current_available_chunks : Array[MarchingSquaresTerrainChunk] = []
 
 var hbox_container
 
@@ -343,11 +344,16 @@ func add_setting(p_params: Dictionary) -> void:
 		SettingType.CHUNK:
 			if plugin.current_terrain_node.get_child_count() == 0:
 				return
-			var chunks : Array = plugin.current_terrain_node.get_children()
+			
+			current_available_chunks.clear()
+			
+			var terrain_children : Array = plugin.current_terrain_node.get_children()
 			var chunk_button := OptionButton.new()
-			for chunk in chunks:
-				chunk_button.add_item("Chunk " + str(chunk.chunk_coords))
-			chunk_button.selected = 0
+			for child in terrain_children:
+				if child is MarchingSquaresTerrainChunk:
+					chunk_button.add_item("Chunk " + str(child.chunk_coords))
+					current_available_chunks.append(child)
+			chunk_button.selected = current_available_chunks.find(plugin.selected_chunk) if not current_available_chunks.is_empty() and plugin.selected_chunk else -1
 			selected_chunk = plugin.current_terrain_node.get_child(0)
 			
 			var option_button := OptionButton.new()
@@ -355,13 +361,17 @@ func add_setting(p_params: Dictionary) -> void:
 			option_button.set_custom_minimum_size(Vector2(65, 35))
 			for mode in MarchingSquaresTerrainChunk.Mode:
 				option_button.add_item(mode)
-			option_button.selected = 1 # Fallback base value
-			option_button.selected = selected_chunk.merge_mode
+			option_button.selected = plugin.selected_chunk.merge_mode if not current_available_chunks.is_empty() and plugin.selected_chunk else -1
 			option_button.item_selected.connect(_on_chunk_mode_changed)
 			
 			chunk_button.set_flat(true)
 			chunk_button.item_selected.connect(func(chunk): _on_chunk_selected(option_button, chunk_button.get_item_text(chunk)))
 			chunk_button.set_custom_minimum_size(Vector2(65, 35))
+			
+			var mult_apply_button := Button.new()
+			mult_apply_button.set_custom_minimum_size(Vector2(65, 30))
+			mult_apply_button.pressed.connect(_apply_mode_to_all_chunks)
+			mult_apply_button.text = "Apply mode to all chunks"
 			
 			cont = CenterContainer.new()
 			cont.set_custom_minimum_size(Vector2(65, 35))
@@ -374,6 +384,15 @@ func add_setting(p_params: Dictionary) -> void:
 			cont = CenterContainer.new()
 			cont.set_custom_minimum_size(Vector2(65, 35))
 			cont.add_child(option_button, true)
+			hbox_container.add_child(cont, true)
+			
+			v_sep = VSeparator.new()
+			hbox_container.add_child(v_sep, true)
+			
+			cont = MarginContainer.new()
+			cont.set_custom_minimum_size(Vector2(65, 35))
+			cont.add_theme_constant_override("margin_bottom", 3)
+			cont.add_child(mult_apply_button, true)
 			hbox_container.add_child(cont, true)
 		SettingType.TERRAIN:
 			var vbox := VBoxContainer.new()
@@ -636,20 +655,33 @@ func _on_chunk_selected(option_button: OptionButton, p_chunk: String) -> void:
 	
 	option_button.selected = chunk.merge_mode
 	selected_chunk = plugin.current_terrain_node.find_child(p_chunk)
+	plugin.selected_chunk = selected_chunk
+	
+	plugin.gizmo_plugin.terrain_gizmo._redraw()
+
+
+func _apply_mode_to_all_chunks() -> void:
+	for child in plugin.current_terrain_node.get_children():
+		if child is MarchingSquaresTerrainChunk:
+			_change_chunk_mode(child, selected_chunk.merge_mode)
 
 
 func _on_chunk_mode_changed(m_mode: int) -> void:
+	_change_chunk_mode(selected_chunk, m_mode)
+
+
+func _change_chunk_mode(_chunk: MarchingSquaresTerrainChunk, m_mode: int) -> void:
 	match MarchingSquaresTerrainChunk.Mode.find_key(m_mode):
 		"CUBIC":
-			selected_chunk.merge_mode = MarchingSquaresTerrainChunk.Mode.CUBIC
+			_chunk.merge_mode = MarchingSquaresTerrainChunk.Mode.CUBIC
 		"POLYHEDRON":
-			selected_chunk.merge_mode = MarchingSquaresTerrainChunk.Mode.POLYHEDRON
+			_chunk.merge_mode = MarchingSquaresTerrainChunk.Mode.POLYHEDRON
 		"ROUNDED_POLYHEDRON":
-			selected_chunk.merge_mode = MarchingSquaresTerrainChunk.Mode.ROUNDED_POLYHEDRON
+			_chunk.merge_mode = MarchingSquaresTerrainChunk.Mode.ROUNDED_POLYHEDRON
 		"SEMI_ROUND":
-			selected_chunk.merge_mode = MarchingSquaresTerrainChunk.Mode.SEMI_ROUND
+			_chunk.merge_mode = MarchingSquaresTerrainChunk.Mode.SEMI_ROUND
 		"SPHERICAL":
-			selected_chunk.merge_mode = MarchingSquaresTerrainChunk.Mode.SPHERICAL
+			_chunk.merge_mode = MarchingSquaresTerrainChunk.Mode.SPHERICAL
 
 #endregion
 
