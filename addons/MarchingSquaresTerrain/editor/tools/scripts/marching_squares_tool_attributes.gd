@@ -170,10 +170,16 @@ func add_setting(p_params: Dictionary) -> void:
 			hbox_container.add_child(cont, true)
 		SettingType.SLIDER:
 			var range_data = p_params.get("range", Vector3(1.0, 50.0, 0.5))
+			var cell_scale_factor := clamp(((plugin.current_terrain_node.cell_size.x + plugin.current_terrain_node.cell_size.y) / 4.0), 0.3, 1.0)
+			var dimensions_scale_factor := clamp((((plugin.current_terrain_node.dimensions.x / 33) + (plugin.current_terrain_node.dimensions.z / 33)) / 2.0), 0.5, 2.0)
+			var scale_factor : float = dimensions_scale_factor * cell_scale_factor
+			var default_value = p_params.get("default", 10.0) # Fallback base value
+			if setting_name == "size":
+				range_data *= scale_factor
+				default_value *= scale_factor
 			var range_min = range_data.x
 			var range_max = range_data.y
 			var range_step = range_data.z
-			var default_value = p_params.get("default", 10.0) # Fallback base value
 			if saved_setting_value is not String and str(saved_setting_value) != "ERROR":
 				default_value = saved_setting_value
 			

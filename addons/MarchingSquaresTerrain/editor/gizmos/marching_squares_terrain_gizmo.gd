@@ -83,6 +83,9 @@ func _redraw():
 	# Check if we're in wall painting mode
 	var is_wall_painting : bool = terrain_plugin.paint_walls_mode and terrain_plugin.mode == terrain_plugin.TerrainToolMode.VERTEX_PAINTING
 	
+	# Set the BRUSH_VISUAL's size dynamically
+	terrain_plugin.BRUSH_VISUAL.size = Vector2(1.0, 1.0) * (terrain_system.cell_size.x + terrain_system.cell_size.y) / 4.0
+	
 	if terrain_chunk_hovered:
 		# Brush radius visualization
 		var brush_transform : Transform3D

@@ -41,7 +41,7 @@ var current_brush_index : int = 0
 
 var brush_position : Vector3
 
-const BRUSH_VISUAL : Mesh = preload("uid://ch6cb07rh0m3l")
+var BRUSH_VISUAL : Mesh = preload("uid://ch6cb07rh0m3l")
 var BRUSH_RADIUS_VISUAL : Mesh = preload("uid://cg3lvmu68oaaa")
 var BRUSH_RADIUS_MATERIAL : ShaderMaterial = preload("uid://dtevocyixqsgv")
 @onready var falloff_curve : Curve = preload("uid://c0bexjsfvvcxb")
@@ -422,17 +422,20 @@ func handle_mouse(camera: Camera3D, event: InputEvent) -> int:
 		
 		# Adjust brush size
 		if event is InputEventMouseButton and Input.is_key_pressed(KEY_SHIFT):
-			var factor: float = event.factor if event.factor else 1
+			var cell_scale_factor := clamp(((terrain.cell_size.x + terrain.cell_size.y) / 4.0), 0.3, 1.0)
+			var dimensions_scale_factor := clamp((((terrain.dimensions.x / 33) + (terrain.dimensions.z / 33)) / 2.0), 0.5, 2.0)
+			var size_scale_factor : float = dimensions_scale_factor * cell_scale_factor
+			var factor : float = event.factor if event.factor else 1
 			if event.button_index == MOUSE_BUTTON_WHEEL_UP:
-				brush_size += 0.5 * factor
-				if brush_size > 50:
-					brush_size = 50
+				brush_size += (0.5 * size_scale_factor) * factor
+				if brush_size > 50 * size_scale_factor:
+					brush_size = 50 * size_scale_factor
 				gizmo_plugin.terrain_gizmo._redraw()
 				return EditorPlugin.AFTER_GUI_INPUT_STOP
 			elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-				brush_size -= 0.5 * factor
-				if brush_size < 1:
-					brush_size = 1
+				brush_size -= (0.5 * size_scale_factor) * factor
+				if brush_size < 1.0 * size_scale_factor:
+					brush_size = 1.0 * size_scale_factor
 				gizmo_plugin.terrain_gizmo._redraw()
 				return EditorPlugin.AFTER_GUI_INPUT_STOP
 		

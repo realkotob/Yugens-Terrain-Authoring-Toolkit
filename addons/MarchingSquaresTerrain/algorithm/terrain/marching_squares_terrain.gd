@@ -70,10 +70,12 @@ enum StorageMode {
 	set(value):
 		dimensions = value
 		terrain_material.set_shader_parameter("chunk_size", value)
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var cell_size : Vector2 = Vector2(2, 2): # XZ Unit size of each cell
+		MarchingSquaresTerrainPlugin.instance.brush_size = MarchingSquaresTerrainPlugin.instance.brush_size * ((value.x / 33) + (value.y / 33)) / 2.0
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var cell_size : Vector2 = Vector2(2.0, 2.0): # XZ Unit size of each cell
 	set(value):
 		cell_size = value
 		terrain_material.set_shader_parameter("cell_size", value)
+		grass_size = grass_size
 @export_custom(PROPERTY_HINT_RANGE, "0, 2", PROPERTY_USAGE_STORAGE) var blend_mode : int = 0:
 	set(value):
 		blend_mode = value
@@ -121,18 +123,20 @@ enum StorageMode {
 		animation_fps = clamp(value, 0, 30)
 		var grass_mat := grass_mesh.material as ShaderMaterial
 		grass_mat.set_shader_parameter("fps", clamp(value, 0, 30))
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_subdivisions := 3:
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_subdivisions : int = 3:
 	set(value):
 		grass_subdivisions = value
 		for chunk: MarchingSquaresTerrainChunk in chunks.values():
 			chunk.grass_planter.multimesh.instance_count = (dimensions.x-1) * (dimensions.z-1) * grass_subdivisions * grass_subdivisions
 			chunk.grass_planter.regenerate_all_cells()
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_size := Vector2(1.0, 1.0):
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_size : Vector2 = Vector2(1.0, 1.0):
 	set(value):
 		grass_size = value
+		var scale_factor := (cell_size.x + cell_size.y) / 4.0
+		var scaled_value := value * scale_factor
 		for chunk: MarchingSquaresTerrainChunk in chunks.values():
-			chunk.grass_planter.multimesh.mesh.size = value
-			chunk.grass_planter.multimesh.mesh.center_offset.y = value.y / 2
+			chunk.grass_planter.multimesh.mesh.size = scaled_value
+			chunk.grass_planter.multimesh.mesh.center_offset.y = scaled_value.y / 2.0
 #endregion
 
 #region vertex painting texture settings

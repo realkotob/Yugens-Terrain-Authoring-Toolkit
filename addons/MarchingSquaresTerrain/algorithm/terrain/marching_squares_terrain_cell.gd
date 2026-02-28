@@ -84,7 +84,9 @@ func _init(chunk_: MarchingSquaresTerrainChunk, color_helper_: MarchingSquaresTe
 	_cy = y_bottom_left
 	_dy = y_bottom_right
 	
-	merge_threshold = merge_threshold_
+	var cell_scale_factor := clamp(((chunk_.terrain_system.cell_size.x + chunk_.terrain_system.cell_size.y) / 4.0), 0.3, 1.0)
+	var dimensions_scale_factor := clamp((((chunk_.terrain_system.dimensions.x / 33) + (chunk_.terrain_system.dimensions.z / 33)) / 2.0), 0.5, 2.0)
+	merge_threshold = merge_threshold_ * dimensions_scale_factor * cell_scale_factor
 	rotation = 0 as CellRotation
 
 func _reset_geometry_cache() -> void:

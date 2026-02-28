@@ -29,7 +29,7 @@ func setup(chunk: MarchingSquaresTerrainChunk, redo: bool = true):
 		multimesh.mesh = terrain_system.grass_mesh
 	else:
 		multimesh.mesh = QuadMesh.new() # Create a temporary quad
-	multimesh.mesh.size = terrain_system.grass_size
+	multimesh.mesh.size = terrain_system.grass_size * (terrain_system.cell_size.x + terrain_system.cell_size.y) / 4.0
 	
 	cast_shadow = SHADOW_CASTING_SETTING_OFF
 
