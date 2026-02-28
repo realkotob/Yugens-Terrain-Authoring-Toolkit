@@ -590,9 +590,11 @@ func draw_pattern(terrain: MarchingSquaresTerrain):
 						global_cells.append(Vector2i(global_x, global_y))
 				
 				for global_cell in global_cells:
-					var current_chunk_coords = Vector2i(global_cell.x / terrain.dimensions.x, global_cell.y / terrain.dimensions.z)
+					var current_chunk_coords = Vector2i(floor(float(global_cell.x) / terrain.dimensions.x), floor(float(global_cell.y) / terrain.dimensions.z))
+					if not terrain.chunks.has(current_chunk_coords):
+						continue
 					var current_chunk = terrain.chunks[current_chunk_coords]
-					var local_cell = Vector2i(global_cell.x % terrain.dimensions.x, global_cell.y % terrain.dimensions.z)
+					var local_cell = Vector2i(posmod(global_cell.x, terrain.dimensions.x), posmod(global_cell.y, terrain.dimensions.z))
 					heights.append(current_chunk.get_height(local_cell))
 				
 				var avg_height := 0.0
@@ -601,9 +603,11 @@ func draw_pattern(terrain: MarchingSquaresTerrain):
 				avg_height /= heights.size()
 				
 				for global_cell in global_cells:
-					var current_chunk_coords = Vector2i(global_cell.x / terrain.dimensions.x, global_cell.y / terrain.dimensions.z)
+					var current_chunk_coords = Vector2i(floor(float(global_cell.x) / terrain.dimensions.x), floor(float(global_cell.y) / terrain.dimensions.z))
+					if not terrain.chunks.has(current_chunk_coords):
+						continue
 					var current_chunk = terrain.chunks[current_chunk_coords]
-					var local_cell = Vector2i(global_cell.x % terrain.dimensions.x, global_cell.y % terrain.dimensions.z)
+					var local_cell = Vector2i(posmod(global_cell.x, terrain.dimensions.x), posmod(global_cell.y, terrain.dimensions.z))
 					
 					if not restore_pattern.has(current_chunk_coords):
 						restore_pattern[current_chunk_coords] = {}
