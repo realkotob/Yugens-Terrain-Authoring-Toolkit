@@ -32,14 +32,16 @@ func _redraw():
 		return
 	
 	# Selected chunk gizmo lines
-	if terrain_plugin.mode == terrain_plugin.TerrainToolMode.CHUNK_MANAGEMENT:
-		if MarchingSquaresTerrainPlugin.instance.selected_chunk:
-			add_chunk_lines(terrain_system, MarchingSquaresTerrainPlugin.instance.selected_chunk.chunk_coords, highlightchunk_material)
+	if terrain_plugin.mode == terrain_plugin.TerrainToolMode.CHUNK_MANAGEMENT and terrain_plugin.selected_chunk:
+		if terrain_plugin.current_terrain_node.find_child("Chunk " + str(terrain_plugin.selected_chunk.chunk_coords)):
+			add_chunk_lines(terrain_system, terrain_plugin.selected_chunk.chunk_coords, highlightchunk_material)
+		else:
+			lines.clear()
 	
 	# Chunk management gizmo lines
 	if terrain_system.chunks.is_empty():
-		if MarchingSquaresTerrainPlugin.instance.is_chunk_plane_hovered:
-			add_chunk_lines(terrain_system, MarchingSquaresTerrainPlugin.instance.current_hovered_chunk, addchunk_material)
+		if terrain_plugin.is_chunk_plane_hovered:
+			add_chunk_lines(terrain_system, terrain_plugin.current_hovered_chunk, addchunk_material)
 	else:
 		for chunk_coords: Vector2i in terrain_system.chunks:
 			try_add_chunk(terrain_system, Vector2i(chunk_coords.x-1, chunk_coords.y))

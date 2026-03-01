@@ -126,6 +126,8 @@ func show_tool_attributes(tool_index: int) -> void:
 	
 	add_child(hbox_container)
 	last_setting_type = SettingType.ERROR # Reset the setting type for correct VSeparators
+	
+	plugin.gizmo_plugin.terrain_gizmo._redraw()
 
 
 func add_setting(p_params: Dictionary) -> void:
@@ -354,7 +356,8 @@ func add_setting(p_params: Dictionary) -> void:
 					chunk_button.add_item("Chunk " + str(child.chunk_coords))
 					current_available_chunks.append(child)
 			chunk_button.selected = current_available_chunks.find(plugin.selected_chunk) if not current_available_chunks.is_empty() and plugin.selected_chunk else -1
-			selected_chunk = plugin.current_terrain_node.get_child(0)
+			if not current_available_chunks.is_empty() and plugin.selected_chunk:
+				selected_chunk = plugin.selected_chunk
 			
 			var option_button := OptionButton.new()
 			option_button.set_flat(true)

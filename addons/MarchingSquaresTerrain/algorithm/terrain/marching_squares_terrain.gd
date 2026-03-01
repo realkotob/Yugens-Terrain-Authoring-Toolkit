@@ -550,12 +550,12 @@ func has_chunk(x: int, z: int) -> bool:
 	return chunks.has(Vector2i(x, z))
 
 
-func add_new_chunk(chunk_x: int, chunk_z: int):
+func add_new_chunk(chunk_x: int, chunk_z: int, plugin: MarchingSquaresTerrainPlugin):
 	var chunk_coords := Vector2i(chunk_x, chunk_z)
 	var new_chunk := MarchingSquaresTerrainChunk.new()
 	new_chunk.name = "Chunk "+str(chunk_coords)
 	new_chunk.terrain_system = self
-	add_chunk(chunk_coords, new_chunk, false)
+	add_chunk(chunk_coords, new_chunk, plugin, false)
 	
 	var chunk_left: MarchingSquaresTerrainChunk = chunks.get(Vector2i(chunk_x-1, chunk_z))
 	if chunk_left:
@@ -580,24 +580,46 @@ func add_new_chunk(chunk_x: int, chunk_z: int):
 	new_chunk.regenerate_mesh()
 
 
-func remove_chunk(x: int, z: int):
+func remove_chunk(x: int, z: int, plugin: MarchingSquaresTerrainPlugin):
 	var chunk_coords := Vector2i(x, z)
 	var chunk: MarchingSquaresTerrainChunk = chunks[chunk_coords]
 	chunks.erase(chunk_coords)  # Use chunk_coords, not chunk object
 	chunk.free()
+	
+	if plugin.selected_chunk.chunk_coords == chunk.chunk_coords:
+		var temp_chunk := MarchingSquaresTerrainChunk.new()
+		temp_chunk.chunk_coords = Vector2i(99999, 99999)
+		plugin.selected_chunk = temp_chunk
+		for child in get_children():
+			if child is MarchingSquaresTerrainChunk:
+				plugin.selected_chunk = child
+				break
+	plugin.ui.tool_attributes.show_tool_attributes(plugin.TerrainToolMode.CHUNK_MANAGEMENT)
+	plugin.gizmo_plugin.terrain_gizmo._redraw()
 
 
 # Remove a chunk but still keep it in memory (so that undo can restore it)
-func remove_chunk_from_tree(x: int, z: int):
+func remove_chunk_from_tree(x: int, z: int, plugin: MarchingSquaresTerrainPlugin):
 	var chunk_coords := Vector2i(x, z)
 	var chunk: MarchingSquaresTerrainChunk = chunks[chunk_coords]
 	chunks.erase(chunk_coords)  # Use chunk_coords, not chunk object
 	chunk._skip_save_on_exit = true  # Prevent mesh save during undo/redo
 	remove_child(chunk)
 	chunk.owner = null
+	
+	if plugin.selected_chunk.chunk_coords == chunk.chunk_coords:
+		var temp_chunk := MarchingSquaresTerrainChunk.new()
+		temp_chunk.chunk_coords = Vector2i(99999, 99999)
+		plugin.selected_chunk = temp_chunk
+		for child in get_children():
+			if child is MarchingSquaresTerrainChunk:
+				plugin.selected_chunk = child
+				break
+	plugin.ui.tool_attributes.show_tool_attributes(plugin.TerrainToolMode.CHUNK_MANAGEMENT)
+	plugin.gizmo_plugin.terrain_gizmo._redraw()
 
 
-func add_chunk(coords: Vector2i, chunk: MarchingSquaresTerrainChunk, regenerate_mesh: bool = true):
+func add_chunk(coords: Vector2i, chunk: MarchingSquaresTerrainChunk, plugin: MarchingSquaresTerrainPlugin, regenerate_mesh: bool = true):
 	chunks[coords] = chunk
 	chunk.terrain_system = self
 	chunk.chunk_coords = coords
@@ -621,6 +643,11 @@ func add_chunk(coords: Vector2i, chunk: MarchingSquaresTerrainChunk, regenerate_
 		_set_owner_recursive(chunk, get_tree().root)
 	chunk.initialize_terrain(regenerate_mesh)
 	print_verbose("[MST] Added new chunk to terrain system at ", chunk)
+	
+	if plugin.selected_chunk.chunk_coords == Vector2i(99999, 99999):
+		plugin.selected_chunk = chunk
+	plugin.ui.tool_attributes.show_tool_attributes(plugin.TerrainToolMode.CHUNK_MANAGEMENT)
+	plugin.gizmo_plugin.terrain_gizmo._redraw()
 
 
 func _set_owner_recursive(node: Node, _owner: Node) -> void:

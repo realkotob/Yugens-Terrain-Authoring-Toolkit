@@ -475,8 +475,8 @@ func handle_mouse(camera: Camera3D, event: InputEvent) -> int:
 			elif chunk:
 				var removed_chunk = terrain.chunks[chunk_coords]
 				get_undo_redo().create_action("remove chunk")
-				get_undo_redo().add_do_method(terrain, "remove_chunk_from_tree", chunk_x, chunk_z)
-				get_undo_redo().add_undo_method(terrain, "add_chunk", chunk_coords, removed_chunk)
+				get_undo_redo().add_do_method(terrain, "remove_chunk_from_tree", chunk_x, chunk_z, self)
+				get_undo_redo().add_undo_method(terrain, "add_chunk", chunk_coords, self, removed_chunk)
 				get_undo_redo().commit_action()
 				return EditorPlugin.AFTER_GUI_INPUT_STOP
 			
@@ -487,8 +487,8 @@ func handle_mouse(camera: Camera3D, event: InputEvent) -> int:
 				var can_add_empty: bool = terrain.chunks.is_empty() or terrain.has_chunk(chunk_x-1, chunk_z) or terrain.has_chunk(chunk_x+1, chunk_z) or terrain.has_chunk(chunk_x, chunk_z-1) or terrain.has_chunk(chunk_x, chunk_z+1)
 				if can_add_empty:
 					get_undo_redo().create_action("add chunk")
-					get_undo_redo().add_do_method(terrain, "add_new_chunk", chunk_x, chunk_z)
-					get_undo_redo().add_undo_method(terrain, "remove_chunk", chunk_x, chunk_z)
+					get_undo_redo().add_do_method(terrain, "add_new_chunk", chunk_x, chunk_z, self)
+					get_undo_redo().add_undo_method(terrain, "remove_chunk", chunk_x, chunk_z, self)
 					get_undo_redo().commit_action()
 					return EditorPlugin.AFTER_GUI_INPUT_STOP
 		
