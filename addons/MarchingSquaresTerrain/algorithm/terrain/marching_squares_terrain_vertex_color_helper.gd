@@ -1,6 +1,7 @@
 extends RefCounted
 class_name MarchingSquaresTerrainVertexColorHelper
 
+
 # < 1.0 = more aggressive wall detection 
 # > 1.0 = less aggressive / more slope blend
 const BLEND_EDGE_SENSITIVITY : float = 1.25
@@ -27,12 +28,10 @@ var cell_mat_c : int = 0
 var chunk : MarchingSquaresTerrainChunk
 var cell : MarchingSquaresTerrainCell
 
-func _init() -> void:
-	pass
 
 func blend_colors(vertex: Vector3, uv: Vector2, diag_midpoint: bool = false) -> Dictionary[String, Color]:
 	var colors : Dictionary[String, Color] = {}
-	var blend_threshold : float = cell.merge_threshold * BLEND_EDGE_SENSITIVITY # We can tweak the BLEND_EDGE_SENSITIVITY to allow more "agressive" Cliff vs Slope detection
+	var blend_threshold : float = cell.merge_threshold * BLEND_EDGE_SENSITIVITY # COMMENT: We can tweak the BLEND_EDGE_SENSITIVITY to allow more "agressive" Cliff vs Slope detection
 	var blend_ab : bool = abs(cell.ay-cell.by) < blend_threshold
 	var blend_ac : bool = abs(cell.ay-cell.cy) < blend_threshold
 	var blend_bd : bool = abs(cell.by-cell.dy) < blend_threshold
@@ -42,7 +41,7 @@ func blend_colors(vertex: Vector3, uv: Vector2, diag_midpoint: bool = false) -> 
 	# Detect ridge BEFORE selecting color maps (ridge needs wall colors, not ground colors)
 	var is_ridge := cell.floor_mode and (uv.y > 0.0)
 	var is_ledge := cell.floor_mode and (uv.x > 0.0)
-
+	
 	# Get color source maps based on floor/wall/ridge state
 	var sources := _get_color_sources(cell.floor_mode)
 	var source_map_0 : PackedColorArray = sources[0]
@@ -50,20 +49,21 @@ func blend_colors(vertex: Vector3, uv: Vector2, diag_midpoint: bool = false) -> 
 	var rl_source_map_0 : PackedColorArray = sources[2]
 	var rl_source_map_1 : PackedColorArray = sources[3]
 	var use_wall_colors := (source_map_0 == chunk.wall_color_map_0)
-
+	
 	# Calculate vertex colors using appropriate interpolation method
 	var lower_0 : Color = cell_wall_lower_color_0 if use_wall_colors else cell_floor_lower_color_0
 	var upper_0 : Color = cell_wall_upper_color_0 if use_wall_colors else cell_floor_upper_color_0
 	colors["color_0"] = _interpolate_vertex_color(vertex.x, vertex.y, vertex.z, source_map_0, diag_midpoint, lower_0, upper_0)
-
+	
 	var lower_1 : Color = cell_wall_lower_color_1 if use_wall_colors else cell_floor_lower_color_1
 	var upper_1 : Color = cell_wall_upper_color_1 if use_wall_colors else cell_floor_upper_color_1
 	colors["color_1"] = _interpolate_vertex_color(vertex.x, vertex.y, vertex.z, source_map_1, diag_midpoint, lower_1, upper_1)
-
+	
 	# is_ridge & is_ledge are already calculated above
 	var c_1_val: Color = Color(chunk.grass_mask_map[cell.cell_coords.y*chunk.dimensions.x + cell.cell_coords.x]) # Grass mask
 	c_1_val.g = 1.0 if is_ridge else 0.0
 	c_1_val.b = 1.0 if is_ledge else 0.0
+	
 	# Calculate and store the closest wall color to the ridge/ledge
 	var rl_lower_0 : Color = cell_wall_lower_color_0
 	var rl_upper_0 : Color = cell_wall_upper_color_0
@@ -72,6 +72,7 @@ func blend_colors(vertex: Vector3, uv: Vector2, diag_midpoint: bool = false) -> 
 	var rl_upper_1 : Color = cell_wall_upper_color_1
 	var rl_color_1 := _interpolate_vertex_color(vertex.x, vertex.y, vertex.z, rl_source_map_1, diag_midpoint, rl_lower_1, rl_upper_1)
 	var rl_color := get_texture_index_from_colors(rl_color_0, rl_color_1)
+	
 	c_1_val.a = rl_color
 	colors["custom_1_value"] = c_1_val
 	
@@ -89,8 +90,8 @@ func calculate_corner_colors():
 	cell_min_height = min(cell.ay, cell.by, cell.cy, cell.dy)
 	cell_max_height = max(cell.ay, cell.by, cell.cy, cell.dy)
 	
-	var x = cell.cell_coords.x
-	var z = cell.cell_coords.y
+	var x := cell.cell_coords.x
+	var z := cell.cell_coords.y
 	
 	# Determine if this is a boundary cell (significant height variation)
 	cell_is_boundary = (cell_max_height - cell_min_height) > cell.merge_threshold
@@ -101,36 +102,36 @@ func calculate_corner_colors():
 	if cell_is_boundary:
 		# Identify corners at each height level for height-based color sampling
 		# FLOOR colors - from color_map (used for regular floor vertices)
-		var floor_corner_color_0s = [
+		var floor_corner_color_0s := [
 			chunk.color_map_0[z * chunk.dimensions.x + x],           # A (top-left)
 			chunk.color_map_0[z * chunk.dimensions.x + x + 1],       # B (top-right)
 			chunk.color_map_0[(z + 1) * chunk.dimensions.x + x],     # C (bottom-left)
 			chunk.color_map_0[(z + 1) * chunk.dimensions.x + x + 1]  # D (bottom-right)
 		]
-		var floor_corner_color_1s = [
+		var floor_corner_color_1s := [
 			chunk.color_map_1[z * chunk.dimensions.x + x],
 			chunk.color_map_1[z * chunk.dimensions.x + x + 1],
 			chunk.color_map_1[(z + 1) * chunk.dimensions.x + x],
 			chunk.color_map_1[(z + 1) * chunk.dimensions.x + x + 1]
 		]
 		# WALL colors - from wall_color_map (used for wall/ridge vertices)
-		var wall_corner_color_0s = [
+		var wall_corner_color_0s := [
 			chunk.wall_color_map_0[z * chunk.dimensions.x + x],           # A (top-left)
 			chunk.wall_color_map_0[z * chunk.dimensions.x + x + 1],       # B (top-right)
 			chunk.wall_color_map_0[(z + 1) * chunk.dimensions.x + x],     # C (bottom-left)
 			chunk.wall_color_map_0[(z + 1) * chunk.dimensions.x + x + 1]  # D (bottom-right)
 		]
-		var wall_corner_color_1s = [
+		var wall_corner_color_1s := [
 			chunk.wall_color_map_1[z * chunk.dimensions.x + x],
 			chunk.wall_color_map_1[z * chunk.dimensions.x + x + 1],
 			chunk.wall_color_map_1[(z + 1) * chunk.dimensions.x + x],
 			chunk.wall_color_map_1[(z + 1) * chunk.dimensions.x + x + 1]
 		]
-		var corner_heights = [cell.ay, cell.by, cell.cy, cell.dy]
+		var corner_heights := [cell.ay, cell.by, cell.cy, cell.dy]
 		
 		# Find corners at min and max height
-		var min_idx = 0
-		var max_idx = 0
+		var min_idx := 0
+		var max_idx := 0
 		for i in range(4):
 			if corner_heights[i] < corner_heights[min_idx]:
 				min_idx = i
@@ -148,9 +149,7 @@ func calculate_corner_colors():
 		cell_wall_lower_color_1 = wall_corner_color_1s[min_idx]
 		cell_wall_upper_color_1 = wall_corner_color_1s[max_idx]
 
-#region color interpolation Helpers
-
-#region cell_geometry helpers and calculation functions
+#region cell_geometry helpers & calculation functions and color interpolation helpers
 
 ## Returns 4 source_maps based on floor/wall[0][1] state, and for setting ridge/ledge[2][3] textures.
 func _get_color_sources(is_floor: bool) -> Array[PackedColorArray]:
@@ -168,7 +167,7 @@ func _calc_diagonal_color(source_map: PackedColorArray) -> Color:
 	if chunk.terrain_system.blend_mode == 1:
 		# Hard edge mode uses same color as cell's top-left corner
 		return source_map[cell.cell_coords.y * chunk.dimensions.x + cell.cell_coords.x]
-
+	
 	# Smooth blend mode - lerp diagonal corners for smoother effect
 	var idx := cell.cell_coords.y * chunk.dimensions.x + cell.cell_coords.x
 	var ad_color : Color = lerp(source_map[idx], source_map[idx + chunk.dimensions.x + 1], 0.5)
@@ -186,13 +185,13 @@ func _calc_boundary_color(y: float, source_map: PackedColorArray, lower_color: C
 	if chunk.terrain_system.blend_mode == 1:
 		# Hard edge mode uses cell's corner color
 		return source_map[cell.cell_coords.y * chunk.dimensions.x + cell.cell_coords.x]
-
+	
 	# HEIGHT-BASED SAMPLING for smooth blend mode
 	var height_range := cell_max_height - cell_min_height
 	var height_factor : float = clamp((y - cell_min_height) / height_range, 0.0, 1.0)
-
+	
 	# Sharp bands: < lower_thresh = lower color, > upper_thresh = upper color, middle = blend
-	var color: Color
+	var color : Color
 	if height_factor < chunk.lower_thresh:
 		color = lower_color
 	elif height_factor > chunk.upper_thresh:
@@ -200,7 +199,7 @@ func _calc_boundary_color(y: float, source_map: PackedColorArray, lower_color: C
 	else:
 		var blend_factor : float = (height_factor - chunk.lower_thresh) / chunk.blend_zone
 		color = lerp(lower_color, upper_color, blend_factor)
-
+	
 	return get_dominant_color(color)
 
 
@@ -209,7 +208,7 @@ func _calc_bilinear_color(x: float, z: float, source_map: PackedColorArray) -> C
 	var idx := cell.cell_coords.y * chunk.dimensions.x + cell.cell_coords.x
 	var ab_color : Color = lerp(source_map[idx], source_map[idx + 1], x)
 	var cd_color : Color = lerp(source_map[idx + chunk.dimensions.x], source_map[idx + chunk.dimensions.x + 1], x)
-
+	
 	if chunk.terrain_system.blend_mode != 1:
 		return get_dominant_color(lerp(ab_color, cd_color, z))  # Mixed triangles
 	return source_map[idx]  # hard squares/hard triangles
@@ -222,16 +221,14 @@ func _interpolate_vertex_color(
 	diag_midpoint: bool,
 	lower_color: Color,
 	upper_color: Color
-) -> Color:
+	) -> Color:
 	if diag_midpoint:
 		return _calc_diagonal_color(source_map)
-
+	
 	if cell_is_boundary:
 		return _calc_boundary_color(y, source_map, lower_color, upper_color)
-
+	
 	return _calc_bilinear_color(x, z, source_map)
-
-#endregion
 
 
 static func get_dominant_color(c: Color) -> Color:

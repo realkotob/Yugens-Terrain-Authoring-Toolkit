@@ -1,6 +1,5 @@
 # This gizmo will have a handle for every single height value.
 # Mostly for debugging.
-# When the overarching terrain system is selected that is where all the brushes will be.
 
 extends EditorNode3DGizmo
 class_name MarchingSquaresTerrainChunkGizmo
@@ -8,20 +7,20 @@ class_name MarchingSquaresTerrainChunkGizmo
 
 func _redraw():
 	clear()
-
-	var terrain: MarchingSquaresTerrainChunk = get_node_3d()
-	var dx = (terrain.dimensions.x - 1) * terrain.cell_size.x
-	var dz = (terrain.dimensions.z - 1) * terrain.cell_size.y
+	
+	var terrain : MarchingSquaresTerrainChunk = get_node_3d()
+	var dx := (terrain.dimensions.x - 1) * terrain.cell_size.x
+	var dz := (terrain.dimensions.z - 1) * terrain.cell_size.y
 	
 	# Only draw the gizmo if this is the only selected node
 	if len(EditorInterface.get_selection().get_selected_nodes()) != 1:
 		return
 	if EditorInterface.get_selection().get_selected_nodes()[0] != terrain:
 		return
-
+	
 	# Handles for raising/lowering terrain (will probably be removed later in favor of brush)
-	var corners = PackedVector3Array()
-	var ids = PackedInt32Array()
+	var corners := PackedVector3Array()
+	var ids := PackedInt32Array()
 	for z in range(terrain.dimensions.z):
 		for x in range(terrain.dimensions.x):
 			var y = terrain.height_map[z][x]

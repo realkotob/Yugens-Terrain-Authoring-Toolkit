@@ -101,7 +101,7 @@ func add_texture_settings() -> void:
 	
 	var terrain := plugin.current_terrain_node
 	
-	var vbox = VBoxContainer.new()
+	var vbox := VBoxContainer.new()
 	vbox.set_custom_minimum_size(Vector2(150, 0))
 	# Floor textures loop (15 slots)
 	for i in range(15):
@@ -193,7 +193,7 @@ func add_texture_settings() -> void:
 			c_pick_button.color_changed.connect(func(color): _on_texture_setting_changed(VAR_NAMES[i].get("color_var"), color))
 			c_pick_button.set_custom_minimum_size(Vector2(150, 25))
 			
-			var c_cont_2 = CenterContainer.new()
+			var c_cont_2 := CenterContainer.new()
 			c_cont_2.set_custom_minimum_size(Vector2(150, 30))
 			c_cont_2.add_child(c_pick_button, true)
 			vbox.add_child(c_cont_2, true)
@@ -208,7 +208,7 @@ func add_texture_settings() -> void:
 			checkbox.toggled.connect(func(pressed): _on_texture_setting_changed(VAR_NAMES[i].get("use_grass_var"), pressed))
 			checkbox.set_custom_minimum_size(Vector2(25, 15))
 			
-			var c_cont_2 = CenterContainer.new()
+			var c_cont_2 := CenterContainer.new()
 			c_cont_2.set_custom_minimum_size(Vector2(25, 25))
 			c_cont_2.add_child(checkbox, true)
 			vbox.add_child(c_cont_2, true)
@@ -217,7 +217,7 @@ func add_texture_settings() -> void:
 	
 	var m_cont := MarginContainer.new()
 	m_cont.add_theme_constant_override("margin_bottom", 7)
-	var export_button = MarchingSquaresTexturePresetExporter.new()
+	var export_button := MarchingSquaresTexturePresetExporter.new()
 	export_button.current_terrain_node = terrain
 	m_cont.add_child(export_button, true)
 	vbox.add_child(m_cont, true)

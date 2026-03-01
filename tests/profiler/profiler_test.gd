@@ -21,4 +21,3 @@ func _physics_process(_delta: float) -> void:
 			row.append(randf_range(-5,5))
 		hm.append(row)
 	benchmark.generate_geometry_benchmark(hm, NUM_CHUNKS)
-	

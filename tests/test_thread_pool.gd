@@ -1,10 +1,11 @@
 extends GutTest
 
+
 func test_all_jobs_finish_on_stop() -> void:
 	var pool := MarchingSquaresThreadPool.new(1)
 	var mutex := Mutex.new()
 	
-	# using dictionary because primitives are not captured by lambda
+	# COMMENT: Using dictionary because primitives are not captured by lambda
 	var helper := {"done": 0}
 	
 	var job := func():
@@ -16,14 +17,15 @@ func test_all_jobs_finish_on_stop() -> void:
 	pool.enqueue(job)
 	pool.enqueue(job)
 	pool.start()
-	# immediate sync after start, only one worker and 1s work time ensures: 
+	# Immediate sync after start, only one worker and 1s work time ensures: 
 	# - there is one job running
 	# - there is one job pending
 	pool.wait()
 	
-	# both jobs are done
+	# Both jobs are done
 	assert_eq(helper["done"], 2)
-	
+
+
 func test_jubs_run_in_parallel() -> void:
 	if OS.get_processor_count() < 2:
 		# if there is only core, this test would fail
@@ -44,4 +46,3 @@ func test_jubs_run_in_parallel() -> void:
 	var end := Time.get_ticks_msec()
 	
 	assert_lt(end-start, 1500)
-	

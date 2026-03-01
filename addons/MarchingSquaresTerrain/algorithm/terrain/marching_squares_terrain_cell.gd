@@ -21,22 +21,22 @@ var cell_coords : Vector2i
 
 var floor_mode : bool
 
-var ay: float
-var by: float
-var dy: float
-var cy: float
+var ay : float
+var by : float
+var dy : float
+var cy : float
 
-var _ay: float
-var _by: float
-var _cy: float
-var _dy: float
+var _ay : float
+var _by : float
+var _cy : float
+var _dy : float
 
-var ab: bool
-var bd: bool
-var cd: bool
-var ac: bool
+var ab : bool
+var bd : bool
+var cd : bool
+var ac : bool
 
-var rotation: CellRotation:
+var rotation : CellRotation:
 	set(x):
 		match x:
 			CellRotation.DEG90: ay = _by
@@ -68,12 +68,11 @@ var rotation: CellRotation:
 		ac = abs(ay-cy) < merge_threshold # left edge
 		
 		rotation = x
-		
 
-var merge_threshold: float
+var merge_threshold : float
 
-var chunk: MarchingSquaresTerrainChunk
-var color_helper: MarchingSquaresTerrainVertexColorHelper
+var chunk : MarchingSquaresTerrainChunk
+var color_helper : MarchingSquaresTerrainVertexColorHelper
 
 
 func _init(chunk_: MarchingSquaresTerrainChunk, color_helper_: MarchingSquaresTerrainVertexColorHelper, y_top_left: float, y_top_right: float, y_bottom_left: float, y_bottom_right: float, merge_threshold_: float) -> void:
@@ -89,12 +88,14 @@ func _init(chunk_: MarchingSquaresTerrainChunk, color_helper_: MarchingSquaresTe
 	merge_threshold = merge_threshold_ * dimensions_scale_factor * cell_scale_factor
 	rotation = 0 as CellRotation
 
+
 func _reset_geometry_cache() -> void:
 	pts = []
 	uvs = []
 	uv2s = []
 	color_0s = []
 	color_1s = []
+
 
 func rotate(r: int) -> void:
 	rotation = ((4 + r + rotation) % 4) as CellRotation
@@ -137,20 +138,20 @@ func generate_geometry(cell_coords_: Vector2i) -> void:
 		# Use the rotation of the corner - the amount of counter-clockwise rotations for it to become the top-left corner, which is just its index in the point lists.
 		rotation = rot as CellRotation
 		
-		# if none of the branches are hit, this will be set to false at the last else statement.
-		# opted for this instead of putting a break in every branch, that would take up space
+		# If none of the branches are hit, this will be set to false at the last else statement.
+		# COMMENT: Opted for this instead of putting a break in every branch, that would take up space
 		case_found = true
 		
 		# Case 1
 		# If A is higher than adjacent and opposite corner is connected to adjacent,
-		# add an outer corner here with upper and lower floor covering whole tile.
+		# Add an outer corner here with upper and lower floor covering whole tile.
 		if is_higher(ay, by) and is_higher(ay, cy) and bd and cd:
 			add_c1()
 		
 		# Case 2
 		# If A is higher than C and B is higher than D,
-		# add an edge here covering whole tile.
-		# (May want to prevent this if B and C are not within merge distance)
+		# Add an edge here covering whole tile.
+		# COMMENT: (May want to prevent this if B and C are not within merge distance)
 		elif is_higher(ay, cy) and is_higher(by, dy) and ab and cd:
 			add_c2()
 		
@@ -198,7 +199,8 @@ func generate_geometry(cell_coords_: Vector2i) -> void:
 		elif is_lower(ay, by) and is_lower(ay, cy) and is_higher(dy, by) and cd:
 			add_c12()
 		
-		# Case 13: Clockwise upwards spiral with A as the highest lowest point and C as the highest. A is lower than B, B is lower than D, D is lower than C, and C is higher than A.
+		# Case 13: Clockwise upwards spiral with A as the highest lowest point and C as the highest.
+		# A is lower than B, B is lower than D, D is lower than C, and C is higher than A.
 		elif is_lower(ay, by) and is_lower(by, dy) and is_lower(dy, cy) and is_higher(cy, ay):
 			add_c13()
 		
@@ -230,16 +232,19 @@ func generate_geometry(cell_coords_: Vector2i) -> void:
 			break
 	
 	if not case_found:
-		#Invalid / unknown cell type. put a full floor here and hope it looks fine
+		# Invalid / unknown cell type. Put a full floor here and hope it looks fine
 		add_c0()
 		
 	chunk.add_polygons(cell_coords, pts, uvs, uv2s, color_0s, color_1s, custom_1_values, mat_blends, floors)
 
+
 func start_floor() -> void:
 	floor_mode = true
-	
+
+
 func start_wall() -> void:
 	floor_mode = false
+
 
 func add_point(x: float, y: float, z: float, u: float, v: float):
 	for i in range(rotation as int):
@@ -250,16 +255,16 @@ func add_point(x: float, y: float, z: float, u: float, v: float):
 	# UV - used for ledge detection. X = closeness to top terrace, Y = closeness to bottom of terrace
 	# Walls will always have UV of 1, 1
 	var uv := Vector2(u, v) if floor_mode else Vector2(1, 1)
-		
-	# same calculations from here
-	var vert = Vector3((cell_coords.x+x) * chunk.cell_size.x, y, (cell_coords.y+z) * chunk.cell_size.y)
+	
+	# Same calculations from here
+	var vert := Vector3((cell_coords.x+x) * chunk.cell_size.x, y, (cell_coords.y+z) * chunk.cell_size.y)
 	var uv2 : Vector2
 	if floor_mode:
 		uv2 = Vector2(vert.x, vert.z) / chunk.cell_size
 	else:
 		# This avoids is_inside_tree() errors when inactive scene tabs are loaded
 		var chunk_pos : Vector3 = chunk.global_position_cached
-		var global_pos = vert + chunk_pos
+		var global_pos := vert + chunk_pos
 		uv2 = (Vector2(global_pos.x, global_pos.y) + Vector2(global_pos.z, global_pos.y))
 	
 	pts.append(vert)
@@ -307,11 +312,11 @@ func add_c6() -> void:
 	add_inner_corner(true, false, true)
 	add_diagonal_floor(cy, cy, true, true)
 	
-	# opposite lower floor
+	# Opposite lower floor
 	rotate(2)
 	add_inner_corner(true, false, true)
 	
-	# higher corner B
+	# Higher corner B
 	rotate(-1)
 	add_outer_corner(false, true)
 
@@ -450,8 +455,8 @@ func add_c16() -> void:
 
 
 func add_c17() -> void:
-	var edge_by = (by + dy) / 2
-	var edge_dy = (by + dy) / 2
+	var edge_by := (by + dy) / 2
+	var edge_dy := (by + dy) / 2
 	
 	# Upper floor
 	start_floor()
@@ -482,8 +487,8 @@ func add_c17() -> void:
 
 func add_c18() -> void:
 	# Only merge the ay/cy edge if AC edge is connected
-	var edge_ay = (ay+cy)/2
-	var edge_cy = (ay+cy)/2
+	var edge_ay := (ay+cy)/2
+	var edge_cy := (ay+cy)/2
 	
 	# Upper floor - use A and B edge for heights
 	start_floor()
@@ -515,7 +520,7 @@ func add_c18() -> void:
 func add_full_floor():
 	start_floor()
 	if higher_poly_floors:
-		var ey = (ay+by+cy+dy)/4
+		var ey := (ay+by+cy+dy)/4
 	
 		add_point(0, ay, 0, 0, 0)
 		add_point(1, by, 0, 0, 0)
@@ -543,10 +548,10 @@ func add_full_floor():
 
 
 # Add an outer corner, where A is the raised corner.
-# if flatten_bottom is true, then bottom_height is used for the lower height of the wall
+# If flatten_bottom is true, then bottom_height is used for the lower height of the wall
 func add_outer_corner(floor_below: bool = true, floor_above: bool = true, flatten_bottom: bool = false, bottom_height: float = -1):
-	var edge_by = bottom_height if flatten_bottom else by
-	var edge_cy = bottom_height if flatten_bottom else cy
+	var edge_by := bottom_height if flatten_bottom else by
+	var edge_cy := bottom_height if flatten_bottom else cy
 	
 	if floor_above:
 		start_floor()
@@ -584,10 +589,10 @@ func add_outer_corner(floor_below: bool = true, floor_above: bool = true, flatte
 # b_x is the x coordinate that the top-right of the upper floor connects to
 func add_edge(floor_below: bool, floor_above: bool, a_x: float = 0, b_x: float = 1):
 	# If A and B are out of merge distance, use the lower of the two
-	var edge_ay = ay if ab else min(ay, by)
-	var edge_by = by if ab else min(ay, by)
-	var edge_cy = cy if cd else max(cy, dy)
-	var edge_dy = dy if cd else max(cy, dy)
+	var edge_ay := ay if ab else min(ay, by)
+	var edge_by := by if ab else min(ay, by)
+	var edge_cy := cy if cd else max(cy, dy)
+	var edge_dy := dy if cd else max(cy, dy)
 	
 	# Upper floor - use A and B for heights
 	if floor_above:
@@ -625,8 +630,8 @@ func add_edge(floor_below: bool, floor_above: bool, a_x: float = 0, b_x: float =
 
 # Add an inner corner, where A is the lowered corner.
 func add_inner_corner(lower_floor: bool = true, full_upper_floor: bool = true, flatten: bool = false, bd_floor: bool = false, cd_floor: bool = false):
-	var corner_by = min(by, cy) if flatten else by
-	var corner_cy = min(by, cy) if flatten else cy
+	var corner_by := min(by, cy) if flatten else by
+	var corner_cy := min(by, cy) if flatten else cy
 	
 	# Lower floor with height of point A
 	if lower_floor:
@@ -658,7 +663,7 @@ func add_inner_corner(lower_floor: bool = true, full_upper_floor: bool = true, f
 		add_point(0, corner_cy, 1, 0, 0)
 		add_point(0.5, corner_by, 0, 0, 1)
 	
-	# if C and D are both higher than B, and B does not connect the corners, there's an edge above, place floors that will connect to the CD edge
+	# If C and D are both higher than B, and B does not connect the corners, there's an edge above, place floors that will connect to the CD edge
 	if cd_floor:
 		# use height of B corner
 		add_point(1, by, 0, 0, 0)
@@ -669,7 +674,7 @@ func add_inner_corner(lower_floor: bool = true, full_upper_floor: bool = true, f
 		add_point(1, by, 0.5, 1, -1)
 		add_point(0, by, 0.5, 1, 1)
 	
-	# if B and D are both higher than C, and C does not connect the corners, there's an edge above, place floors that will connect to the BD edge
+	# If B and D are both higher than C, and C does not connect the corners, there's an edge above, place floors that will connect to the BD edge
 	if bd_floor: 
 		add_point(0, cy, 0.5, 0, 1)
 		add_point(0.5, cy, 0, 1, 1)

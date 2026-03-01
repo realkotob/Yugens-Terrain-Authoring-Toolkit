@@ -38,20 +38,19 @@ enum StorageMode {
 				notify_property_list_changed()
 				return
 		data_directory = value
-		
-@export_category("Runtime Baking")
 
+@export_category("Runtime Baking")
 ## If this option is true, the textures will be baked into a texture atlas
 ## at runtime. This will improve rendering performance, but increase cost of generation
 ## slightly.
-@export var enable_runtime_texture_baking: bool = true
+@export var enable_runtime_texture_baking : bool = true
 
 ## The resolution used per polygon when baking the texture atlas. Increase this value
 ## when using high-res textures. Higher values increase the baking time and memory usage.
-@export var polygon_texture_resolution: int = 32
+@export var polygon_texture_resolution : int = 32
 
 ## Used for overriding the material of the baked terrain texture.
-@export var bake_material_override: Material
+@export var bake_material_override : Material
 
 ## Unique identifier for this terrain instance (auto-generated on first save).
 ## Prevents path collisions when nodes are recreated with the same name.
@@ -513,11 +512,13 @@ func _notification(what: int) -> void:
 func _enter_tree() -> void:
 	call_deferred("_deferred_enter_tree")
 
+
 func _initialize_data_directory() -> void:
 	if Engine.is_editor_hint() and data_directory.is_empty():
 		var auto_path := MSTDataHandler.get_data_directory(self)
 		if not auto_path.is_empty():
 			data_directory = auto_path
+
 
 func _deferred_enter_tree() -> void:
 	_initialize_data_directory()
@@ -526,7 +527,7 @@ func _deferred_enter_tree() -> void:
 	# This is needed because _init() creates fresh duplicated materials that don't have
 	# the terrain's saved texture values - only the base resource defaults
 	force_batch_update()
-
+	
 	# Populate chunks dictionary from scene children
 	chunks.clear()
 	for chunk in get_children():
@@ -534,14 +535,14 @@ func _deferred_enter_tree() -> void:
 			chunks[chunk.chunk_coords] = chunk
 			chunk.terrain_system = self
 			chunk.grass_planter = null
-
+	
 	# Load external data if storage was previously initialized
 	if _storage_initialized:
 		MSTDataHandler.load_terrain_data(self)
 	elif Engine.is_editor_hint() and MSTDataHandler.needs_migration(self):
 		# Auto-migrate embedded data to external storage (editor only)
 		MSTDataHandler.migrate_to_external_storage(self)
-
+	
 	# Initialize all chunks (regenerate mesh/grass from loaded data)
 	for chunk in chunks.values():
 		chunk.initialize_terrain(true)
@@ -558,22 +559,22 @@ func add_new_chunk(chunk_x: int, chunk_z: int, plugin: MarchingSquaresTerrainPlu
 	new_chunk.terrain_system = self
 	add_chunk(chunk_coords, new_chunk, plugin, false)
 	
-	var chunk_left: MarchingSquaresTerrainChunk = chunks.get(Vector2i(chunk_x-1, chunk_z))
+	var chunk_left : MarchingSquaresTerrainChunk = chunks.get(Vector2i(chunk_x-1, chunk_z))
 	if chunk_left:
 		for z in range(0, dimensions.z):
 			new_chunk.height_map[z][0] = chunk_left.height_map[z][dimensions.x - 1]
 	
-	var chunk_right: MarchingSquaresTerrainChunk = chunks.get(Vector2i(chunk_x+1, chunk_z))
+	var chunk_right : MarchingSquaresTerrainChunk = chunks.get(Vector2i(chunk_x+1, chunk_z))
 	if chunk_right:
 		for z in range(0, dimensions.z):
 			chunk_right.height_map[z][dimensions.x - 1] = chunk_right.height_map[z][0]
 	
-	var chunk_up: MarchingSquaresTerrainChunk = chunks.get(Vector2i(chunk_x, chunk_z-1))
+	var chunk_up : MarchingSquaresTerrainChunk = chunks.get(Vector2i(chunk_x, chunk_z-1))
 	if chunk_up:
 		for x in range(0, dimensions.x):
 			new_chunk.height_map[0][x] = chunk_up.height_map[dimensions.z - 1][x]
 	
-	var chunk_down: MarchingSquaresTerrainChunk = chunks.get(Vector2i(chunk_x, chunk_z+1))
+	var chunk_down : MarchingSquaresTerrainChunk = chunks.get(Vector2i(chunk_x, chunk_z+1))
 	if chunk_down:
 		for x in range(0, dimensions.x):
 			new_chunk.height_map[dimensions.z - 1][x] = chunk_down.height_map[0][x]
@@ -583,11 +584,11 @@ func add_new_chunk(chunk_x: int, chunk_z: int, plugin: MarchingSquaresTerrainPlu
 
 func remove_chunk(x: int, z: int, plugin: MarchingSquaresTerrainPlugin):
 	var chunk_coords := Vector2i(x, z)
-	var chunk: MarchingSquaresTerrainChunk = chunks[chunk_coords]
+	var chunk : MarchingSquaresTerrainChunk = chunks[chunk_coords]
 	chunks.erase(chunk_coords)  # Use chunk_coords, not chunk object
 	chunk.free()
 	
-	if plugin.selected_chunk.chunk_coords == chunk.chunk_coords:
+	if plugin.selected_chunk and plugin.selected_chunk.chunk_coords == chunk.chunk_coords:
 		var temp_chunk := MarchingSquaresTerrainChunk.new()
 		temp_chunk.chunk_coords = Vector2i(99999, 99999)
 		plugin.selected_chunk = temp_chunk
@@ -602,13 +603,13 @@ func remove_chunk(x: int, z: int, plugin: MarchingSquaresTerrainPlugin):
 # Remove a chunk but still keep it in memory (so that undo can restore it)
 func remove_chunk_from_tree(x: int, z: int, plugin: MarchingSquaresTerrainPlugin):
 	var chunk_coords := Vector2i(x, z)
-	var chunk: MarchingSquaresTerrainChunk = chunks[chunk_coords]
+	var chunk : MarchingSquaresTerrainChunk = chunks[chunk_coords]
 	chunks.erase(chunk_coords)  # Use chunk_coords, not chunk object
 	chunk._skip_save_on_exit = true  # Prevent mesh save during undo/redo
 	remove_child(chunk)
 	chunk.owner = null
 	
-	if plugin.selected_chunk.chunk_coords == chunk.chunk_coords:
+	if plugin.selected_chunk and plugin.selected_chunk.chunk_coords == chunk.chunk_coords:
 		var temp_chunk := MarchingSquaresTerrainChunk.new()
 		temp_chunk.chunk_coords = Vector2i(99999, 99999)
 		plugin.selected_chunk = temp_chunk
@@ -645,7 +646,7 @@ func add_chunk(coords: Vector2i, chunk: MarchingSquaresTerrainChunk, plugin: Mar
 	chunk.initialize_terrain(regenerate_mesh)
 	print_verbose("[MST] Added new chunk to terrain system at ", chunk)
 	
-	if plugin.selected_chunk.chunk_coords == Vector2i(99999, 99999):
+	if plugin.selected_chunk and plugin.selected_chunk.chunk_coords == Vector2i(99999, 99999):
 		plugin.selected_chunk = chunk
 	plugin.ui.tool_attributes.show_tool_attributes(plugin.TerrainToolMode.CHUNK_MANAGEMENT)
 	plugin.gizmo_plugin.terrain_gizmo._redraw()
@@ -716,7 +717,7 @@ func force_batch_update() -> void:
 	terrain_material.set_shader_parameter("chunk_size", dimensions)
 	terrain_material.set_shader_parameter("cell_size", cell_size)
 	
-	# TERRAIN MATERIAL - Ground TExtures
+	# TERRAIN MATERIAL - Ground Textures
 	terrain_material.set_shader_parameter("vc_tex_rr", texture_1)
 	terrain_material.set_shader_parameter("vc_tex_rg", texture_2)
 	terrain_material.set_shader_parameter("vc_tex_rb", texture_3)
@@ -732,7 +733,7 @@ func force_batch_update() -> void:
 	terrain_material.set_shader_parameter("vc_tex_ar", texture_13)
 	terrain_material.set_shader_parameter("vc_tex_ag", texture_14)
 	terrain_material.set_shader_parameter("vc_tex_ab", texture_15)
-
+	
 	# TERRAIN MATERIAL - Ground Colors (used for both floor and wall in unified system)
 	terrain_material.set_shader_parameter("tex_albedo_1", texture_albedo_1)
 	terrain_material.set_shader_parameter("tex_albedo_2", texture_albedo_2)
@@ -740,7 +741,7 @@ func force_batch_update() -> void:
 	terrain_material.set_shader_parameter("tex_albedo_4", texture_albedo_4)
 	terrain_material.set_shader_parameter("tex_albedo_5", texture_albedo_5)
 	terrain_material.set_shader_parameter("tex_albedo_6", texture_albedo_6)
-
+	
 	# TERRAIN MATERIAL - Per-Texture UV Scales
 	terrain_material.set_shader_parameter("tex_scale_1", texture_scale_1)
 	terrain_material.set_shader_parameter("tex_scale_2", texture_scale_2)

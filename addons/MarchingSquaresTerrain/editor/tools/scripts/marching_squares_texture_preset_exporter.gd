@@ -52,17 +52,17 @@ func _export_to_texture_preset() -> void:
 
 
 func _on_filename_confirmed() -> void:
-	var filename = filename_input.text.strip_edges().to_lower().to_snake_case()
+	var filename := filename_input.text.strip_edges().to_lower().to_snake_case()
 	
 	if filename == "":
 		push_error("Filename cannot be empty!")
 		return
 	
-	var dir = DirAccess.open("res://")
+	var dir := DirAccess.open("res://")
 	if not dir.dir_exists(PRESET_DIR):
 		dir.make_dir_recursive(PRESET_DIR)
 	
-	var path = PRESET_DIR + filename + ".tres"
+	var path := PRESET_DIR + filename + ".tres"
 	
 	if FileAccess.file_exists(path):
 		_show_overwrite_confirmation(path)
@@ -93,13 +93,13 @@ func _show_success_notification():
 
 
 func _save_preset(path: String) -> void:
-	var new_tex_preset = MarchingSquaresTexturePreset.new()
+	var new_tex_preset := MarchingSquaresTexturePreset.new()
 	
 	new_tex_preset.preset_name = filename_input.text
 	new_tex_preset.new_textures = texture_preset_data
 	new_tex_preset.new_tex_names = TEXTURE_NAMES.duplicate()
 	
-	var save_error = ResourceSaver.save(new_tex_preset, path)
+	var save_error := ResourceSaver.save(new_tex_preset, path)
 	if save_error == OK:
 		print("Texture preset saved to: " + path)
 		EditorInterface.get_resource_filesystem().scan()

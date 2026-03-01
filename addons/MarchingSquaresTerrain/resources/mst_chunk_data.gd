@@ -5,34 +5,34 @@ extends Resource
 
 
 ## Chunk coordinates in the terrain grid
-@export var chunk_coords: Vector2i
+@export var chunk_coords : Vector2i
 
 ## Merge mode setting 
-@export var merge_mode: int
+@export var merge_mode : int
 
 ## Height values as 2D array 
-@export var height_map: Array
+@export var height_map : Array
 
 ## Ground texture indices 
-@export var ground_texture_idx: PackedByteArray
+@export var ground_texture_idx : PackedByteArray
 
 ## Wall texture indices 
-@export var wall_texture_idx: PackedByteArray
+@export var wall_texture_idx : PackedByteArray
 
 ## Grass mask 
-@export var grass_mask: PackedByteArray
+@export var grass_mask : PackedByteArray
 
-## Legacy format (V1.1) for backward compatibility during migration
-@export var color_map_0: PackedColorArray
-@export var color_map_1: PackedColorArray
-@export var wall_color_map_0: PackedColorArray
-@export var wall_color_map_1: PackedColorArray
-@export var grass_mask_map: PackedColorArray
+# Legacy format (V1.1) for backward compatibility during migration
+@export var color_map_0 : PackedColorArray
+@export var color_map_1 : PackedColorArray
+@export var wall_color_map_0 : PackedColorArray
+@export var wall_color_map_1 : PackedColorArray
+@export var grass_mask_map : PackedColorArray
 
-## Ephemeral data saved for caching but regenerated on load if missing
-@export var mesh: Mesh
-@export var collision_faces: PackedVector3Array
-@export var grass_multimesh: MultiMesh
+# Ephemeral data saved for caching but regenerated on load if missing
+@export var mesh : Mesh
+@export var collision_faces : PackedVector3Array
+@export var grass_multimesh : MultiMesh
 
 
 ## Helper to set collision from a ConcavePolygonShape3D

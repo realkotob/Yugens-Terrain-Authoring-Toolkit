@@ -1,9 +1,11 @@
 extends Node
 class_name MarchingSquaresGenerationBenchmark
 
-signal test_done(theaded: float, ntheaded: float)
+
+signal test_done(threaded: float, nthreaded: float)
 
 @export var disable_non_threaded: bool = false
+
 
 func generate_geometry_benchmark(height_map: Array[Array], N: int):
 	var chunk := MarchingSquaresTerrainChunk.new()
@@ -20,7 +22,7 @@ func generate_geometry_benchmark(height_map: Array[Array], N: int):
 	chunk.generate_color_maps()
 	chunk.generate_grass_mask_map()
 	
-	var sum: float = 0
+	var sum : float = 0
 	for i in range(N):
 		var t0 := Time.get_ticks_msec()
 		chunk.regenerate_all_cells(true)

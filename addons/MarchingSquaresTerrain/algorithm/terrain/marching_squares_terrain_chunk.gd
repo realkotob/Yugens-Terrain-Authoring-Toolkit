@@ -16,6 +16,7 @@ const MERGE_MODE = {
 # These two need to be normal export vars or else godot's internal logic crashes the plugin
 @export var terrain_system : MarchingSquaresTerrain
 @export var chunk_coords : Vector2i = Vector2i.ZERO
+
 @export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var merge_mode : Mode = Mode.POLYHEDRON: # The max height distance between points before a wall is created between them
 	set(mode):
 		merge_mode = mode
@@ -57,7 +58,6 @@ var dimensions : Vector3i:
 var cell_size : Vector2:
 	get:
 		return terrain_system.cell_size
-		
 #endregion
 
 var st : SurfaceTool # The surfacetool used to construct the current terrain
@@ -72,7 +72,7 @@ var _data_dirty : bool = false # Set to true when source data changes, triggers 
 # Temporary storage for ephemeral resources during scene save
 var _temp_mesh : ArrayMesh
 var _temp_grass_multimesh : MultiMesh
-var _temp_collision_shapes : Array[ConcavePolygonShape3D] = []  #old scenes may have duplicates
+var _temp_collision_shapes : Array[ConcavePolygonShape3D] = []  # COMMENT: Old scenes may have duplicates
 var _temp_height_map : Array  # Source data - saved to external storage, not scene file
 #endregion
 
@@ -80,7 +80,7 @@ var _temp_height_map : Array  # Source data - saved to external storage, not sce
 # Terrain blend options to allow for smooth color and height blend influence at transitions and at different heights 
 var lower_thresh : float = 0.3 # Sharp bands: < 0.3 = lower color
 var upper_thresh : float = 0.7 #, > 0.7 = upper color, middle = blend
-var blend_zone = upper_thresh - lower_thresh
+var blend_zone := upper_thresh - lower_thresh
 #endregion
 
 # Called by TerrainSystem parent
@@ -136,7 +136,7 @@ func _notification(what: int) -> void:
 	match what:
 		NOTIFICATION_EDITOR_PRE_SAVE:
 			# Store height_map and clear - source data saved to external storage, not scene
-			_skip_save_on_exit = _skip_save_on_exit # surpress warning
+			_skip_save_on_exit = _skip_save_on_exit # Surpress warning
 			_temp_height_map = height_map
 			height_map = []
 			
@@ -201,7 +201,7 @@ func _exit_tree() -> void:
 	_temp_mesh = null
 	_temp_grass_multimesh = null
 	_temp_collision_shapes.clear()
-
+	
 	# Clear owner on ALL collision nodes to prevent serialization edge cases
 	if Engine.is_editor_hint():
 		for child in get_children():
@@ -215,6 +215,7 @@ func _exit_tree() -> void:
 	if terrain_system and terrain_system.chunks.get(chunk_coords) == self:
 		terrain_system.chunks.erase(chunk_coords)
 
+
 func regenerate_mesh(use_threads: bool = false):
 	st = SurfaceTool.new()
 	if mesh:
@@ -224,7 +225,7 @@ func regenerate_mesh(use_threads: bool = false):
 	st.set_custom_format(1, SurfaceTool.CUSTOM_RGBA_FLOAT)
 	st.set_custom_format(2, SurfaceTool.CUSTOM_RGBA_FLOAT)
 	
-	var start_time: int = Time.get_ticks_msec()
+	var start_time : int = Time.get_ticks_msec()
 	
 	if not get_node_or_null("GrassPlanter"):
 		grass_planter = get_node_or_null("GrassPlanter")
@@ -267,11 +268,11 @@ func regenerate_mesh(use_threads: bool = false):
 				if _child is CollisionShape3D:
 					_child.set_visible(false)
 	
-	var elapsed_time: int = Time.get_ticks_msec() - start_time
+	var elapsed_time : int = Time.get_ticks_msec() - start_time
 	print_verbose("Generated terrain in "+str(elapsed_time)+"ms")
 	
 	if not Engine.is_editor_hint() and terrain_system.enable_runtime_texture_baking:
-		var baker = MarchingSquaresGeometryBaker.new()
+		var baker := MarchingSquaresGeometryBaker.new()
 		baker.polygon_texture_resolution = terrain_system.polygon_texture_resolution
 		baker.finished.connect(func(mesh_: Mesh, _original: MeshInstance3D, img: Image):
 			mesh = mesh_
@@ -288,6 +289,7 @@ func regenerate_mesh(use_threads: bool = false):
 			mesh.surface_set_material(0, mat)
 		)
 		baker.bake_geometry_texture(self, get_tree())
+
 
 func generate_terrain_cells(use_threads: bool):
 	if not cell_geometry:
@@ -429,7 +431,7 @@ func generate_height_map():
 		for x in range(dimensions.x):
 			height_map[z][x] = 0.0
 	
-	var noise = terrain_system.noise_hmap
+	var noise := terrain_system.noise_hmap
 	if noise:
 		for z in range(dimensions.z):
 			for x in range(dimensions.x):

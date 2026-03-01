@@ -73,7 +73,7 @@ func show_tool_attributes(tool_index: int) -> void:
 	if not plugin.toolbar.toolbox:
 		return
 	
-	var tool = plugin.toolbar.toolbox.tools.get(tool_index)
+	var tool := plugin.toolbar.toolbox.tools.get(tool_index)
 	var tool_attributes : MarchingSquaresToolAttributeSettings = tool.get("attributes")
 	var type_map = {
 		"slider": SettingType.SLIDER,
@@ -156,7 +156,7 @@ func add_setting(p_params: Dictionary) -> void:
 		hbox_container.add_child(c_cont, true)
 	
 	var cont
-	var saved_setting_value = _get_setting_value(setting_name)
+	var saved_setting_value := _get_setting_value(setting_name)
 	match setting_type:
 		SettingType.CHECKBOX:
 			var checkbox := CheckBox.new()
@@ -172,11 +172,11 @@ func add_setting(p_params: Dictionary) -> void:
 			cont.add_child(checkbox, true)
 			hbox_container.add_child(cont, true)
 		SettingType.SLIDER:
-			var range_data = p_params.get("range", Vector3(1.0, 50.0, 0.5))
+			var range_data := p_params.get("range", Vector3(1.0, 50.0, 0.5))
 			var cell_scale_factor := clamp(((plugin.current_terrain_node.cell_size.x + plugin.current_terrain_node.cell_size.y) / 4.0), 0.3, 1.0)
 			var dimensions_scale_factor := clamp((((plugin.current_terrain_node.dimensions.x / 33) + (plugin.current_terrain_node.dimensions.z / 33)) / 2.0), 0.5, 2.0)
 			var scale_factor : float = dimensions_scale_factor * cell_scale_factor
-			var default_value = p_params.get("default", 10.0) # Fallback base value
+			var default_value := p_params.get("default", 10.0) # Fallback base value
 			if setting_name == "size":
 				range_data *= scale_factor
 				default_value *= scale_factor
@@ -220,7 +220,7 @@ func add_setting(p_params: Dictionary) -> void:
 			var option_button := OptionButton.new()
 			for option in options:
 				option_button.add_item(option)
-			var default_value = p_params.get("default", 0) # Fallback base value
+			var default_value := p_params.get("default", 0) # Fallback base value
 			if saved_setting_value is not String and str(saved_setting_value) != "ERROR":
 				default_value = saved_setting_value
 			option_button.selected = default_value
@@ -401,7 +401,7 @@ func add_setting(p_params: Dictionary) -> void:
 			var vbox := VBoxContainer.new()
 			for setting in terrain_settings_data:
 				var editor_setting = terrain_settings_data[setting]
-				var s_value = plugin.current_terrain_node.get(setting)
+				var s_value := plugin.current_terrain_node.get(setting)
 				
 				var hbox := HBoxContainer.new()
 				
@@ -423,14 +423,14 @@ func add_setting(p_params: Dictionary) -> void:
 				var ts_cont : Control
 				match editor_setting:
 					"Vector2":
-						var editor_vec2 = _make_vector_editor(editor_setting, s_value, setting)
+						var editor_vec2 := _make_vector_editor(editor_setting, s_value, setting)
 						ts_cont = CenterContainer.new()
 						ts_cont.set_custom_minimum_size(Vector2(130, 35))
 						ts_cont.add_child(editor_vec2, true)
 						hbox.add_child(ts_cont, true)
 						vbox.add_child(hbox, true)
 					"Vector3i":
-						var editor_vec3i = _make_vector_editor(editor_setting, s_value, setting)
+						var editor_vec3i := _make_vector_editor(editor_setting, s_value, setting)
 						ts_cont = CenterContainer.new()
 						ts_cont.set_custom_minimum_size(Vector2(185, 35))
 						ts_cont.add_child(editor_vec3i, true)
@@ -526,7 +526,7 @@ func add_setting(p_params: Dictionary) -> void:
 							option_button.selected = plugin.current_terrain_node.get(setting)
 						option_button.item_selected.connect(func(index): _on_terrain_setting_changed(setting, index))
 						option_button.set_custom_minimum_size(Vector2(100, 35))
-
+						
 						ts_cont = CenterContainer.new()
 						ts_cont.set_custom_minimum_size(Vector2(100, 35))
 						ts_cont.add_child(option_button, true)
@@ -539,7 +539,7 @@ func add_setting(p_params: Dictionary) -> void:
 						line_edit.placeholder_text = "(auto - scene relative)"
 						line_edit.text_submitted.connect(func(new_text): _on_terrain_setting_changed(setting, new_text))
 						line_edit.set_custom_minimum_size(Vector2(200, 25))
-
+						
 						ts_cont = CenterContainer.new()
 						ts_cont.set_custom_minimum_size(Vector2(210, 35))
 						ts_cont.add_child(line_edit, true)
@@ -548,7 +548,7 @@ func add_setting(p_params: Dictionary) -> void:
 					"FolderPicker":
 						var folder_hbox := HBoxContainer.new()
 						folder_hbox.add_theme_constant_override("separation", 4)
-
+						
 						var path_edit := LineEdit.new()
 						path_edit.set_flat(true)
 						path_edit.text = str(plugin.current_terrain_node.get(setting))
@@ -556,14 +556,14 @@ func add_setting(p_params: Dictionary) -> void:
 						path_edit.text_submitted.connect(func(new_text): _on_terrain_setting_changed(setting, new_text))
 						path_edit.set_custom_minimum_size(Vector2(180, 25))
 						folder_hbox.add_child(path_edit, true)
-
+						
 						var browse_btn := Button.new()
 						browse_btn.text = "..."
 						browse_btn.tooltip_text = "Browse for folder"
 						browse_btn.set_custom_minimum_size(Vector2(30, 25))
 						browse_btn.pressed.connect(func(): _open_folder_dialog(setting, path_edit))
 						folder_hbox.add_child(browse_btn, true)
-
+						
 						ts_cont = CenterContainer.new()
 						ts_cont.set_custom_minimum_size(Vector2(220, 35))
 						ts_cont.add_child(folder_hbox, true)
@@ -623,21 +623,21 @@ func _open_folder_dialog(setting_name: String, path_edit: LineEdit) -> void:
 	dialog.file_mode = EditorFileDialog.FILE_MODE_OPEN_DIR
 	dialog.access = EditorFileDialog.ACCESS_RESOURCES
 	dialog.title = "Select Directory"
-
+	
 	# Set initial path from current value or project root
 	var current_path : String = path_edit.text
 	if current_path.is_empty():
 		dialog.current_dir = "res://"
 	else:
 		dialog.current_dir = current_path.get_base_dir()
-
+	
 	dialog.dir_selected.connect(func(dir: String):
 		path_edit.text = dir
 		_on_terrain_setting_changed(setting_name, dir)
 		dialog.queue_free()
 	)
 	dialog.canceled.connect(func(): dialog.queue_free())
-
+	
 	# Add to editor base control for proper modal behavior
 	EditorInterface.get_base_control().add_child(dialog)
 	dialog.popup_centered(Vector2i(600, 400))
@@ -697,10 +697,10 @@ func _make_vector_editor(type: String, value: Variant, setting_name: String) -> 
 		var spin_x := make_spinbox(value.x, 0.1)
 		var spin_y := make_spinbox(value.y, 0.1)
 		
-		var handler_x = func(v):
+		var handler_x := func(v):
 			var updated_val = Vector2(v, spin_y.value)
 			_on_terrain_setting_changed(setting_name, updated_val)
-		var handler_y = func(v):
+		var handler_y := func(v):
 			var updated_val = Vector2(spin_x.value, v)
 			_on_terrain_setting_changed(setting_name, updated_val)
 		
@@ -715,13 +715,13 @@ func _make_vector_editor(type: String, value: Variant, setting_name: String) -> 
 		var spin_y := make_spinbox(value.y, 1.0)
 		var spin_z := make_spinbox(value.z, 1.0)
 		
-		var handler_x = func(v):
+		var handler_x := func(v):
 			var updated_val = Vector3i(int(v), int(spin_y.value), int(spin_z.value))
 			_on_terrain_setting_changed(setting_name, updated_val)
-		var handler_y = func(v):
+		var handler_y := func(v):
 			var updated_val = Vector3i(int(spin_x.value), int(v), int(spin_z.value))
 			_on_terrain_setting_changed(setting_name, updated_val)
-		var handler_z = func(v):
+		var handler_z := func(v):
 			var updated_val = Vector3i(int(spin_x.value), int(spin_y.value), int(v))
 			_on_terrain_setting_changed(setting_name, updated_val)
 		
@@ -755,8 +755,9 @@ func _hide_textures(texture_node: Node) -> void:
 	var texture_button := texture_node.get_child(0) as Button
 	texture_button.visible = false
 
+
 func _format_constant_string(text: String) -> String:
-	var words = text.to_lower().split("_")
+	var words := text.to_lower().split("_")
 	for i in words.size():
 		words[i] = words[i].capitalize()
 	return " ".join(words)

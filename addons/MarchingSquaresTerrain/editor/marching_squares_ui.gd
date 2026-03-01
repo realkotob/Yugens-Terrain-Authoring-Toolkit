@@ -42,7 +42,7 @@ var toolbar : TOOLBAR
 var tool_attributes : TOOL_ATTRIBUTES
 var texture_settings : TEXTURE_SETTINGS
 var active_tool : int
-var visible: bool = false
+var visible : bool = false
 
 
 func _enter_tree() -> void:
@@ -248,7 +248,7 @@ func _on_texture_setting_changed(p_setting_name: String, p_value: Variant) -> vo
 	if not terrain:
 		printerr("ERROR: [MarchingSquaresUI] No current terrain node to apply texture settings to")
 		return
-
+	
 	# Texture properties (Texture2D or null)
 	if p_setting_name in TEXTURE_PROPERTIES:
 		if p_value is Texture2D or p_value == null:
@@ -269,7 +269,7 @@ func _on_texture_setting_changed(p_setting_name: String, p_value: Variant) -> vo
 	elif p_setting_name in TEXTURE_SCALE_PROPERTIES:
 		if p_value is float or p_value is int:
 			terrain.set(p_setting_name, float(p_value))
-
+	
 	terrain.save_to_preset()
 
 #endregion

@@ -1,5 +1,6 @@
 extends GutTest
 
+
 func test_speed():
 	var benchmark := MarchingSquaresGenerationBenchmark.new()
 	benchmark.test_done.connect(func(threaded_time, non_threaded_time):
@@ -19,4 +20,3 @@ func test_speed():
 			row.append(randf_range(-5,5))
 		hm.append(row)
 	benchmark.generate_geometry_benchmark(hm, NUM_CHUNKS)
-	

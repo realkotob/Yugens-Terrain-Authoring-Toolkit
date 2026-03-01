@@ -8,7 +8,7 @@ static func get_directory_size_recursive(dir_path: String) -> int:
 	var dir := DirAccess.open(dir_path)
 	if not dir:
 		return 0
-
+	
 	dir.list_dir_begin()
 	var file_name := dir.get_next()
 	while file_name != "":
