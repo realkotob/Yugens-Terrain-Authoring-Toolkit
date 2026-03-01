@@ -70,7 +70,8 @@ enum StorageMode {
 	set(value):
 		dimensions = value
 		terrain_material.set_shader_parameter("chunk_size", value)
-		MarchingSquaresTerrainPlugin.instance.brush_size = MarchingSquaresTerrainPlugin.instance.brush_size * ((value.x / 33) + (value.y / 33)) / 2.0
+		if Engine.is_editor_hint():
+			MarchingSquaresTerrainPlugin.instance.brush_size = MarchingSquaresTerrainPlugin.instance.brush_size * ((value.x / 33) + (value.y / 33)) / 2.0
 @export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var cell_size : Vector2 = Vector2(2.0, 2.0): # XZ Unit size of each cell
 	set(value):
 		cell_size = value
