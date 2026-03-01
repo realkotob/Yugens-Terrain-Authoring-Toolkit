@@ -363,7 +363,7 @@ func add_setting(p_params: Dictionary) -> void:
 			option_button.set_flat(true)
 			option_button.set_custom_minimum_size(Vector2(65, 35))
 			for mode in MarchingSquaresTerrainChunk.Mode:
-				option_button.add_item(mode)
+				option_button.add_item(_format_constant_string(mode))
 			option_button.selected = plugin.selected_chunk.merge_mode if not current_available_chunks.is_empty() and plugin.selected_chunk else -1
 			option_button.item_selected.connect(_on_chunk_mode_changed)
 			
@@ -754,5 +754,11 @@ func _make_editor_name(var_name: String) -> String:
 func _hide_textures(texture_node: Node) -> void:
 	var texture_button := texture_node.get_child(0) as Button
 	texture_button.visible = false
+
+func _format_constant_string(text: String) -> String:
+	var words = text.to_lower().split("_")
+	for i in words.size():
+		words[i] = words[i].capitalize()
+	return " ".join(words)
 
 #endregion
