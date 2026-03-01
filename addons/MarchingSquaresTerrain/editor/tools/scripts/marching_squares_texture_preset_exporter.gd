@@ -87,11 +87,6 @@ func _show_overwrite_confirmation(path: String) -> void:
 	confirm_dialog.popup_centered()
 
 
-func _show_success_notification():
-	if Engine.is_editor_hint():
-		EditorInterface.get_base_control().show_accept_dialog("Preset saved successfully!\nSaved to: " + PRESET_DIR, "Success")
-
-
 func _save_preset(path: String) -> void:
 	var new_tex_preset := MarchingSquaresTexturePreset.new()
 	

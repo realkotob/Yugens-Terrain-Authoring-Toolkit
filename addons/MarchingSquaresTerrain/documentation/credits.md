@@ -2,10 +2,12 @@
 
 Developed by [Yūgen](https://www.youtube.com/@yugen_seishin) and originally forked from [Jackachulian](https://github.com/jackachulian/jackachulian) on github.
 
-Special Contributors:
+Collaborators (v1.1.0 ONWARDS):
 * [DanTrz](https://github.com/DanTrz)
+* [powertomato](https://github.com/powertomato)
+* [santarl](https://github.com/santarl)
 
-A special thanks to DanTrz (creator of the TileMapLayer3D plugin) for co-authoring big parts of the plugin since the 1.0 release. He has been an amazing contributor to the project and an awesome guy to work with!
+A special thanks to DanTrz (creator of the TileMapLayer3D plugin), powertomato and santarl for co-authoring big parts of the plugin since the 1.0 release. They have been amazing contributors to the project and awesome people to work with!
 
 Contributors:
 * [Dylearn](https://www.youtube.com/@Dylearn)

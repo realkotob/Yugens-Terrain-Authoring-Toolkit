@@ -154,7 +154,7 @@ func _enter_tree():
 
 func _deferred_enter_tree() -> void:
 	if not _safe_initialize():
-		printerr("ERROR: [MarchingSquaresTerrainPlugin] failed to initialize plugin: " + initialization_error)
+		push_error("Failed to initialize plugin: " + initialization_error)
 	else:
 		print_verbose("[MarchingSquaresTerrainPlugin] initialized succesfully!")
 
@@ -254,9 +254,9 @@ func _physics_process(delta: float) -> void:
 
 func _edit(object: Object) -> void:
 	if not is_initialized:
-		printerr("ERROR: [MarchingSquaresTerrainPlugin] plugin not yet initialized, calling _safe_initialize() as failsafe")
+		push_error("Plugin not yet initialized, calling _safe_initialize() as failsafe")
 		if not _safe_initialize():
-			printerr("ERROR: [MarchingSquaresTerrainPlugin] failed to initialize plugin for editing")
+			push_error("Failed to initialize plugin for editing")
 			return
 	if object is MarchingSquaresTerrain:
 		if ui:

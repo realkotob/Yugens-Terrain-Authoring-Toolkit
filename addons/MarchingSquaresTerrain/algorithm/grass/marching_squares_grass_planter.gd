@@ -15,7 +15,7 @@ func setup(chunk: MarchingSquaresTerrainChunk, redo: bool = true):
 	terrain_system = _chunk.terrain_system
 	
 	if not _chunk or not terrain_system:
-		printerr("SETUP FAILED - no chunk or terrain system found for GrassPlanter")
+		push_error("SETUP FAILED - no chunk or terrain system found for GrassPlanter")
 		return
 	
 	if (redo and multimesh) or !multimesh:
@@ -37,11 +37,11 @@ func setup(chunk: MarchingSquaresTerrainChunk, redo: bool = true):
 func regenerate_all_cells() -> void:
 	# Safety checks
 	if not _chunk:
-		printerr("_chunk not set while regenerating cells")
+		push_error("_chunk not set while regenerating cells")
 		return
 	
 	if not terrain_system:
-		printerr("terrain_system not set while regenerating cells")
+		push_error("terrain_system not set while regenerating cells")
 		return
 	
 	if not multimesh:
@@ -60,25 +60,25 @@ func regenerate_all_cells() -> void:
 func generate_grass_on_cell(cell_coords: Vector2i) -> void:
 	# Safety checks
 	if not _chunk:
-		printerr("MarchingSquaresGrassPlanter couldn't find a reference to _chunk")
+		push_error("Couldn't find a reference to _chunk")
 		return
 	
 	if not terrain_system:
-		printerr("MarchingSquaresGrassPlanter couldn't find a reference to terrain_system")
+		push_error("Couldn't find a reference to terrain_system")
 		return
 	
 	if not _chunk.cell_geometry:
-		printerr("MarchingSquaresGrassPlanter couldn't find a reference to cell_geometry")
+		push_error("Couldn't find a reference to cell_geometry")
 		return
 	
 	if not _chunk.cell_geometry.has(cell_coords):
-		printerr("MarchingSquaresGrassPlanter couldn't find a reference to cell_coords")
+		push_error("Couldn't find a reference to cell_coords")
 		return
 	
 	var cell_geometry = _chunk.cell_geometry[cell_coords]
 	
 	if not cell_geometry.has("verts") or not cell_geometry.has("uvs") or not cell_geometry.has("color_0s") or not cell_geometry.has("color_1s") or not cell_geometry.has("custom_1_values") or not cell_geometry.has("is_floor"):
-		printerr("[MarchingSquaresGrassPlanter] cell_geometry doesn't have one of the following required data: 1) verts, 2) uvs, 3) colors, 4) custom_1_values, 5) is_floor")
+		push_error("cell_geometry doesn't have one of the following required data: 1) verts, 2) uvs, 3) colors, 4) custom_1_values, 5) is_floor")
 		return
 	
 	var points : PackedVector2Array = []

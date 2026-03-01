@@ -13,7 +13,7 @@ For community showcases, feature requests and bug reporting, please refer to the
 * Used to elevate or lower terrain.
   * Holding **[SHIFT]** and pressing **[LEFT MOUSE BUTTON]** with most brush tools selected will keep adding terrain to the selection even after letting go of the original mouse click.
   * In the same fashion as above, holding **[SHIFT]** and using the **[SCROLL WHEEL]** decreases and increases the current brush size.
-  * You can also press **[ALT]** or **[RMB]** to deselect the current draw selection.
+  * You can also press **[ALT]**, **[ESC]** or **[RMB]** to deselect the current draw selection.
 
 ### Level Tool
 * Used to level terrain to a certain height.
@@ -47,12 +47,15 @@ For community showcases, feature requests and bug reporting, please refer to the
 ### Debug Brush Tool
 * Used to print the following data about selected cells:
   * Global position;
-  * Internal color id;
+  * Internal color id (calculated from two Vec4's');
   * Normals;
 
 ### Chunk Management Tool
 * Used to create, delete and change chunk settings.
+* Holding **[CTRL]** and pressing **[LEFT MOUSE BUTTON]** will set the selected chunk to the hovered chunk.
+  * The selected chunk will show in the editor via a blue square ui element.
 * Individual chunk's vertex merge thresholds can be changed → making terrain _rounder_ or _blockier_.
+  * The currently selected chunk's merge threshold can also be applied to all chunks at once via a button.
 
 ### Terrain Settings Tool
 * Used to tweak global terrain settings.

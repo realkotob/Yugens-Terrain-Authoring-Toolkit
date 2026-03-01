@@ -73,10 +73,10 @@ The current _type_ field options are:
 2. SLIDER,
 3. OPTION,
 4. TEXT,
-5. PRESET,
-6. QUICK_PAINT,
-7. CHUNK,
-8. TERRAIN,
+5. CHUNK,
+6. TERRAIN,
+7. PRESET,
+8. QUICK_PAINT,
 9. ERROR, _# This one is used as a failsafe if the internal logic fails._
 
 If you have a tool that uses custom logic that has nothing to do with brushes, then it is recommended to make its own option for it like CHUNK or TERRAIN. Adding new options can be done in the **MarchingSquaresToolAttributes** script under the `enum SettingType` variable. Make sure to also include the new setting type in the `type_map` variable in the `show_tool_attributes(tool_index: int) -> void` function.

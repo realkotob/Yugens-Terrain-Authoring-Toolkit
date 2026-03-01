@@ -243,7 +243,7 @@ func try_add_chunk(terrain_system: MarchingSquaresTerrain, coords: Vector2i):
 		add_chunk_lines(terrain_system, coords, removechunk_material) 
 
 
-# Draw chunk lines around a chunk
+# Draw chunk ui lines inside and around a chunk
 func add_chunk_lines(terrain_system: MarchingSquaresTerrain, coords: Vector2i, material: Material):
 	var dx := (terrain_system.dimensions.x - 1) * terrain_system.cell_size.x
 	var dz := (terrain_system.dimensions.z - 1) * terrain_system.cell_size.y

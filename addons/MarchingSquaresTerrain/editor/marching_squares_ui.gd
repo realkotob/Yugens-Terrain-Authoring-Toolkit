@@ -51,11 +51,11 @@ func _enter_tree() -> void:
 
 func _deferred_enter_tree() -> void:
 	if not Engine.is_editor_hint():
-		printerr("ERROR: [MarchingSquaresUI] attempt to load during runtime (NOT SUPPORTED)")
+		push_error("Attempt to load during runtime (NOT SUPPORTED IN CURRENT BUILD)")
 		return
 	
 	if not plugin:
-		printerr("ERROR: [MarchingSquaresUI] plugin not ready")
+		push_error("Plugin not ready")
 		return
 	
 	toolbar = TOOLBAR.new()
@@ -246,7 +246,7 @@ func _on_terrain_setting_changed(p_setting_name: String, p_value: Variant) -> vo
 func _on_texture_setting_changed(p_setting_name: String, p_value: Variant) -> void:
 	var terrain := plugin.current_terrain_node
 	if not terrain:
-		printerr("ERROR: [MarchingSquaresUI] No current terrain node to apply texture settings to")
+		push_error("No current terrain node to apply texture settings to")
 		return
 	
 	# Texture properties (Texture2D or null)

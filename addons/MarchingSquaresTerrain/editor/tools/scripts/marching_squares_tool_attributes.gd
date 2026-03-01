@@ -576,7 +576,7 @@ func add_setting(p_params: Dictionary) -> void:
 			if vbox.get_child_count() > 0:
 				hbox_container.add_child(vbox)
 		SettingType.ERROR: # Fallback
-			printerr("ERROR: [MarchingSquaresToolAttributes] couldn't load tool attributes setting")
+			push_error("Couldn't load tool attributes setting")
 	
 	last_setting_type = setting_type
 
@@ -614,7 +614,7 @@ func _get_setting_value(p_setting_name: String) -> Variant:
 		"terrain_settings":
 			pass
 		_:
-			printerr("ERROR: [MarchingSquaresToolAttributes] couldn't find tool attributes setting name")
+			push_error("Couldn't find tool attributes setting name")
 	return "ERROR"
 
 
