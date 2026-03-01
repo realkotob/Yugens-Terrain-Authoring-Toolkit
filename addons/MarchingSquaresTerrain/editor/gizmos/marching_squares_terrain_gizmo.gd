@@ -7,6 +7,7 @@ var lines : PackedVector3Array = PackedVector3Array()
 
 var addchunk_material : Material
 var removechunk_material : Material
+var highlightchunk_material : Material
 var brush_material : Material
 
 var terrain_plugin : MarchingSquaresTerrainPlugin
@@ -18,6 +19,7 @@ func _redraw():
 	
 	addchunk_material = get_plugin().get_material("addchunk", self)
 	removechunk_material = get_plugin().get_material("removechunk", self)
+	highlightchunk_material = get_plugin().get_material("highlightchunk", self)
 	brush_material = get_plugin().get_material("brush", self)
 	
 	var terrain_system: MarchingSquaresTerrain = get_node_3d()
@@ -29,10 +31,17 @@ func _redraw():
 	if EditorInterface.get_selection().get_selected_nodes()[0] != terrain_system:
 		return
 	
+	# Selected chunk gizmo lines
+	if terrain_plugin.mode == terrain_plugin.TerrainToolMode.CHUNK_MANAGEMENT and terrain_plugin.selected_chunk:
+		if terrain_plugin.current_terrain_node.find_child("Chunk " + str(terrain_plugin.selected_chunk.chunk_coords)):
+			add_chunk_lines(terrain_system, terrain_plugin.selected_chunk.chunk_coords, highlightchunk_material)
+		else:
+			lines.clear()
+	
 	# Chunk management gizmo lines
 	if terrain_system.chunks.is_empty():
-		if MarchingSquaresTerrainPlugin.instance.is_chunk_plane_hovered:
-			add_chunk_lines(terrain_system, MarchingSquaresTerrainPlugin.instance.current_hovered_chunk, addchunk_material)
+		if terrain_plugin.is_chunk_plane_hovered:
+			add_chunk_lines(terrain_system, terrain_plugin.current_hovered_chunk, addchunk_material)
 	else:
 		for chunk_coords: Vector2i in terrain_system.chunks:
 			try_add_chunk(terrain_system, Vector2i(chunk_coords.x-1, chunk_coords.y))
@@ -82,6 +91,9 @@ func _redraw():
 	
 	# Check if we're in wall painting mode
 	var is_wall_painting : bool = terrain_plugin.paint_walls_mode and terrain_plugin.mode == terrain_plugin.TerrainToolMode.VERTEX_PAINTING
+	
+	# Set the BRUSH_VISUAL's size dynamically
+	terrain_plugin.BRUSH_VISUAL.size = Vector2(1.0, 1.0) * (terrain_system.cell_size.x + terrain_system.cell_size.y) / 4.0
 	
 	if terrain_chunk_hovered:
 		# Brush radius visualization
@@ -218,6 +230,9 @@ func _create_brush_basis(normal: Vector3, brush_size: float) -> Basis:
 func try_add_chunk(terrain_system: MarchingSquaresTerrain, coords: Vector2i):
 	var terrain_plugin = MarchingSquaresTerrainPlugin.instance
 	
+	if Input.is_key_pressed(KEY_CTRL):
+		return
+	
 	# Add chunk
 	if (terrain_plugin.mode == terrain_plugin.TerrainToolMode.CHUNK_MANAGEMENT or Input.is_key_pressed(KEY_SHIFT)) and not terrain_system.chunks.has(coords) and terrain_plugin.is_chunk_plane_hovered and terrain_plugin.current_hovered_chunk == coords:
 		add_chunk_lines(terrain_system, coords, addchunk_material)
@@ -261,5 +276,16 @@ func add_chunk_lines(terrain_system: MarchingSquaresTerrain, coords: Vector2i, m
 		lines.append(Vector3(lerp(x, dx, 0.75), 0, lerp(z, dz, 0.5)))
 		lines.append(Vector3(lerp(x, dx, 0.5), 0, lerp(z, dz, 0.25)))
 		lines.append(Vector3(lerp(x, dx, 0.5), 0, lerp(z, dz, 0.75)))
+	
+	if material == highlightchunk_material:
+		lines.append(Vector3(lerp(x, dx, 0.25), 0, lerp(z, dz, 0.25)))
+		lines.append(Vector3(lerp(x, dx, 0.75), 0, lerp(z, dz, 0.25)))
+		lines.append(Vector3(lerp(x, dx, 0.25), 0, lerp(z, dz, 0.25)))
+		lines.append(Vector3(lerp(x, dx, 0.25), 0, lerp(z, dz, 0.75)))
+		
+		lines.append(Vector3(lerp(x, dx, 0.75), 0, lerp(z, dz, 0.25)))
+		lines.append(Vector3(lerp(x, dx, 0.75), 0, lerp(z, dz, 0.75)))
+		lines.append(Vector3(lerp(x, dx, 0.25), 0, lerp(z, dz, 0.75)))
+		lines.append(Vector3(lerp(x, dx, 0.75), 0, lerp(z, dz, 0.75)))
 	
 	add_lines(lines, material, false)

@@ -23,6 +23,8 @@ var initialization_error : String = ""
 
 var current_terrain_node : MarchingSquaresTerrain
 
+var selected_chunk : MarchingSquaresTerrainChunk
+
 # Flag to prevent _set_new_textures() when syncing preset from terrain node
 var _syncing_from_terrain : bool = false
 
@@ -41,7 +43,7 @@ var current_brush_index : int = 0
 
 var brush_position : Vector3
 
-const BRUSH_VISUAL : Mesh = preload("uid://ch6cb07rh0m3l")
+var BRUSH_VISUAL : Mesh = preload("uid://ch6cb07rh0m3l")
 var BRUSH_RADIUS_VISUAL : Mesh = preload("uid://cg3lvmu68oaaa")
 var BRUSH_RADIUS_MATERIAL : ShaderMaterial = preload("uid://dtevocyixqsgv")
 @onready var falloff_curve : Curve = preload("uid://c0bexjsfvvcxb")
@@ -422,17 +424,20 @@ func handle_mouse(camera: Camera3D, event: InputEvent) -> int:
 		
 		# Adjust brush size
 		if event is InputEventMouseButton and Input.is_key_pressed(KEY_SHIFT):
-			var factor: float = event.factor if event.factor else 1
+			var cell_scale_factor := clamp(((terrain.cell_size.x + terrain.cell_size.y) / 4.0), 0.3, 1.0)
+			var dimensions_scale_factor := clamp((((terrain.dimensions.x / 33) + (terrain.dimensions.z / 33)) / 2.0), 0.5, 2.0)
+			var size_scale_factor : float = dimensions_scale_factor * cell_scale_factor
+			var factor : float = event.factor if event.factor else 1
 			if event.button_index == MOUSE_BUTTON_WHEEL_UP:
-				brush_size += 0.5 * factor
-				if brush_size > 50:
-					brush_size = 50
+				brush_size += (0.5 * size_scale_factor) * factor
+				if brush_size > 50 * size_scale_factor:
+					brush_size = 50 * size_scale_factor
 				gizmo_plugin.terrain_gizmo._redraw()
 				return EditorPlugin.AFTER_GUI_INPUT_STOP
 			elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-				brush_size -= 0.5 * factor
-				if brush_size < 1:
-					brush_size = 1
+				brush_size -= (0.5 * size_scale_factor) * factor
+				if brush_size < 1.0 * size_scale_factor:
+					brush_size = 1.0 * size_scale_factor
 				gizmo_plugin.terrain_gizmo._redraw()
 				return EditorPlugin.AFTER_GUI_INPUT_STOP
 		
@@ -460,12 +465,18 @@ func handle_mouse(camera: Camera3D, event: InputEvent) -> int:
 		
 		# On click, add or remove chunk if in chunk_management mode
 		if mode == TerrainToolMode.CHUNK_MANAGEMENT and event is InputEventMouseButton and event.is_pressed() and event.button_index == MouseButton.MOUSE_BUTTON_LEFT:
+			# Select chunk
+			if Input.is_key_pressed(KEY_CTRL):
+				selected_chunk = terrain.chunks.get(current_hovered_chunk)
+				ui.tool_attributes.show_tool_attributes(TerrainToolMode.CHUNK_MANAGEMENT)
+				ui.tool_attributes.selected_chunk = selected_chunk
+			
 			# Remove chunk
-			if chunk:
+			elif chunk:
 				var removed_chunk = terrain.chunks[chunk_coords]
 				get_undo_redo().create_action("remove chunk")
-				get_undo_redo().add_do_method(terrain, "remove_chunk_from_tree", chunk_x, chunk_z)
-				get_undo_redo().add_undo_method(terrain, "add_chunk", chunk_coords, removed_chunk)
+				get_undo_redo().add_do_method(terrain, "remove_chunk_from_tree", chunk_x, chunk_z, self)
+				get_undo_redo().add_undo_method(terrain, "add_chunk", chunk_coords, self, removed_chunk)
 				get_undo_redo().commit_action()
 				return EditorPlugin.AFTER_GUI_INPUT_STOP
 			
@@ -476,8 +487,8 @@ func handle_mouse(camera: Camera3D, event: InputEvent) -> int:
 				var can_add_empty: bool = terrain.chunks.is_empty() or terrain.has_chunk(chunk_x-1, chunk_z) or terrain.has_chunk(chunk_x+1, chunk_z) or terrain.has_chunk(chunk_x, chunk_z-1) or terrain.has_chunk(chunk_x, chunk_z+1)
 				if can_add_empty:
 					get_undo_redo().create_action("add chunk")
-					get_undo_redo().add_do_method(terrain, "add_new_chunk", chunk_x, chunk_z)
-					get_undo_redo().add_undo_method(terrain, "remove_chunk", chunk_x, chunk_z)
+					get_undo_redo().add_do_method(terrain, "add_new_chunk", chunk_x, chunk_z, self)
+					get_undo_redo().add_undo_method(terrain, "remove_chunk", chunk_x, chunk_z, self)
 					get_undo_redo().commit_action()
 					return EditorPlugin.AFTER_GUI_INPUT_STOP
 		
@@ -485,7 +496,7 @@ func handle_mouse(camera: Camera3D, event: InputEvent) -> int:
 	else:
 		is_chunk_plane_hovered = false
 	
-	# Consume clicks but allow other click / mouse motion types to reach the gui, for camera movement, etc	
+	# Consume clicks but allow other click / mouse motion types to reach the gui, for camera movement, etc
 	if event is InputEventMouseButton and event.is_pressed() and event.button_index == MouseButton.MOUSE_BUTTON_LEFT:
 		return EditorPlugin.AFTER_GUI_INPUT_STOP
 	
@@ -569,31 +580,53 @@ func draw_pattern(terrain: MarchingSquaresTerrain):
 				draw_value = lerp(restore_value, height, sample)
 			elif mode == TerrainToolMode.SMOOTH:
 				var heights : Array[float] = []
+				var global_cells : Array[Vector2i] = []
 				
-				for dc in draw_chunk_dict.keys():
-					var _chunk = terrain.chunks[draw_chunk_coords]
-					heights.append(_chunk.get_height(dc))
+				for chunk_coords in current_draw_pattern.keys():
+					var chunk_dict = current_draw_pattern[chunk_coords]
+					for cell_coords in chunk_dict.keys():
+						var global_x = chunk_coords.x * terrain.dimensions.x + cell_coords.x
+						var global_y = chunk_coords.y * terrain.dimensions.z + cell_coords.y
+						global_cells.append(Vector2i(global_x, global_y))
+				
+				for global_cell in global_cells:
+					var current_chunk_coords = Vector2i(floor(float(global_cell.x) / terrain.dimensions.x), floor(float(global_cell.y) / terrain.dimensions.z))
+					if not terrain.chunks.has(current_chunk_coords):
+						continue
+					var current_chunk = terrain.chunks[current_chunk_coords]
+					var local_cell = Vector2i(posmod(global_cell.x, terrain.dimensions.x), posmod(global_cell.y, terrain.dimensions.z))
+					heights.append(current_chunk.get_height(local_cell))
 				
 				var avg_height := 0.0
 				for h in heights:
 					avg_height += h
 				avg_height /= heights.size()
 				
-				for dc in draw_chunk_dict.keys():
-					var _chunk = terrain.chunks[draw_chunk_coords]
-					restore_value = _chunk.get_height(dc)
+				for global_cell in global_cells:
+					var current_chunk_coords = Vector2i(floor(float(global_cell.x) / terrain.dimensions.x), floor(float(global_cell.y) / terrain.dimensions.z))
+					if not terrain.chunks.has(current_chunk_coords):
+						continue
+					var current_chunk = terrain.chunks[current_chunk_coords]
+					var local_cell = Vector2i(posmod(global_cell.x, terrain.dimensions.x), posmod(global_cell.y, terrain.dimensions.z))
 					
-					var f = sample * strength
-					draw_value = lerp(restore_value, avg_height, f)
+					if not restore_pattern.has(current_chunk_coords):
+						restore_pattern[current_chunk_coords] = {}
+					if not pattern.has(current_chunk_coords):
+						pattern[current_chunk_coords] = {}
 					
-					restore_pattern[draw_chunk_coords][dc] = restore_value
-					pattern[draw_chunk_coords][dc] = draw_value
+					# Overwrite sample var with neighbouring chunks' data included
+					sample = clamp(current_draw_pattern.get(current_chunk_coords, {}).get(local_cell, sample), 0.001, 0.999)
+					restore_value = current_chunk.get_height(local_cell)
+					draw_value = lerp(restore_value, avg_height, sample * strength)
+					
+					restore_pattern[current_chunk_coords][local_cell] = restore_value
+					pattern[current_chunk_coords][local_cell] = draw_value
 			elif mode == TerrainToolMode.BRIDGE:
 				var b_end := Vector2(brush_position.x, brush_position.z)
 				var b_start := Vector2(bridge_start_pos.x, bridge_start_pos.z)
 				var bridge_length := (b_end - b_start).length()
 				if bridge_length < 0.5 or draw_chunk_dict.size() < 3: # Skip small bridges so the terrain doesn't glitch
-					continue
+					return
 				
 				# Convert cell to world-space
 				var global_cell := Vector2(
@@ -601,9 +634,9 @@ func draw_pattern(terrain: MarchingSquaresTerrain):
 					(draw_chunk_coords.y * terrain.dimensions.z + draw_cell_coords.y) * terrain.cell_size.y)
 				
 				if draw_chunk_coords != first_chunk:
-					global_cell.x += (first_chunk.x - draw_chunk_coords.x) * 2
+					global_cell.x += (first_chunk.x - draw_chunk_coords.x) * terrain.cell_size.x
 				if draw_chunk_coords != first_chunk:
-					global_cell.y += (first_chunk.y - draw_chunk_coords.y) * 2
+					global_cell.y += (first_chunk.y - draw_chunk_coords.y) * terrain.cell_size.y
 				
 				# Calculate the 2D bridge direction vector
 				var bridge_dir := (b_end - b_start) / bridge_length
