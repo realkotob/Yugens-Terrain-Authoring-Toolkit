@@ -607,3 +607,37 @@ func regenerate_all_cells(use_threads: bool):
 			needs_update[z][x] = true
 	
 	regenerate_mesh(use_threads)
+
+
+@export_tool_button("Export GLB") var bake = func():
+	var tree := get_tree()
+	
+	var baker = MarchingSquaresGeometryBaker.new()
+	baker.polygon_texture_resolution = terrain_system.polygon_texture_resolution
+	
+	var f := func(bakedMesh: Mesh, original: MeshInstance3D, bakedTexture: Image):
+		var dialog := FileDialog.new()
+		get_tree().root.add_child(dialog)
+		dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
+		dialog.access = FileDialog.ACCESS_FILESYSTEM
+		
+		var inst := MeshInstance3D.new()
+		inst.mesh = bakedMesh
+		var mat := StandardMaterial3D.new()
+		mat.albedo_texture = ImageTexture.create_from_image(bakedTexture)
+		inst.mesh.surface_set_material(0, mat)
+		var file_selected := func(path: String):
+			var state := GLTFState.new()
+			var doc := GLTFDocument.new()
+			doc.append_from_scene(inst, state)
+			doc.write_to_filesystem(state, path)
+			dialog.queue_free()
+		dialog.add_filter("*.glb", "GLB file")
+		dialog.connect("file_selected", file_selected)
+		dialog.popup_centered()
+	
+	baker.finished.connect(f)
+	baker.bake_geometry_texture(self, tree)
+	
+	await baker.finished
+	baker.finished.disconnect(f)
