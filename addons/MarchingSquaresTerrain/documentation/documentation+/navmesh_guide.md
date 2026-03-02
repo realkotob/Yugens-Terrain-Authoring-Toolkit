@@ -15,6 +15,6 @@ As the plugin currently generates dense, complex geometry it can sometimes be ha
    * Agents (Height) → 2.0
    * Agents (Radius) → 1.0
    * Agents (Max Climb) → 0.5
-3. In the Source Group Name (within NavigationMesh), you will now need to specify what groups to generate the NavigationMesh data for. This will avoid godot scanning everything. The new settings we just applied will reduce the data required for this process.
-4. Finally, make sure that within the **Terrain Chunk** nodes, the "StaticBody3D" nodes in are added to the group you listed in "Source Group Name" setting.
+3. In the Source Group Name (within NavigationMesh), you will now need to specify what groups to generate the NavigationMesh data for. This will avoid godot scanning everything. The new settings we just applied will reduce the data required for this process. Make sure that the group name starts with *navmesh_*, otherwise the "StaticBody3D" children of the chunks will not copy the groups upon (re)creation.
+4. Finally, make sure that the **Terrain Chunk** nodes are added to the group you listed in "Source Group Name" setting. We put the group on the chunk itself instead of the "StaticBody3D" as they get deleted and recreated after every save.
 - By doing this, you will only generate NavMeshData for the specific chunks' "StaticBody3D" that you added to the group. And with the new NavigationMesh resource settings, you will reduce the complexity in the NavData generated.

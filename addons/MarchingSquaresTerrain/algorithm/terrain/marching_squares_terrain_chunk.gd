@@ -599,6 +599,9 @@ func _recreate_collision_body() -> void:
 		if scene_root:
 			body.owner = scene_root
 			col_shape.owner = scene_root
+		for group in get_groups():
+			if group.begins_with("navmesh_"):
+				body.add_to_group(group)
 
 
 func regenerate_all_cells(use_threads: bool):
