@@ -41,7 +41,7 @@ var grass_mask_map : PackedColorArray # Stores if a cell should have grass or no
 
 var merge_threshold : float = MERGE_MODE[Mode.POLYHEDRON]
 
-var grass_planter : MarchingSquaresGrassPlanter = preload("uid://b0dc71ti1ofmh").instantiate()
+var grass_planter : MarchingSquaresGrassPlanter = load("uid://b0dc71ti1ofmh").instantiate()
 
 var global_position_cached : Vector3 = Vector3.ZERO
 
@@ -193,6 +193,20 @@ func _notification(what: int) -> void:
 					for shape_child in child.get_children():
 						if shape_child is CollisionShape3D:
 							shape_child.owner = null
+
+
+func _enter_tree():
+	if Engine.is_editor_hint():
+		call_deferred("_editor_refresh")
+
+
+func _editor_refresh():
+	if not needs_update:
+		return
+	for z in range(needs_update.size()):
+		for x in range(needs_update[z].size()):
+			needs_update[z][x] = true
+	regenerate_mesh(false)
 
 
 func _exit_tree() -> void:
