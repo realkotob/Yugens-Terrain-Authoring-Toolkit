@@ -6,12 +6,14 @@
 [ext_resource type="Script" uid="uid://cql4d8s5t5xcx" path="res://addons/MarchingSquaresTerrain/algorithm/terrain/marching_squares_terrain_chunk.gd" id="4_0xhur"]
 [ext_resource type="Script" uid="uid://22l7ysgniux3" path="res://addons/MarchingSquaresTerrain/algorithm/grass/marching_squares_grass_planter.gd" id="5_rcx4y"]
 
-[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_e28qv"]
-sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
-ground_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_0450b"]
+sky_top_color = Color(0.099877305, 0.1779601, 0.38608697, 1)
+sky_horizon_color = Color(0.4529245, 0.6658377, 0.93863547, 1)
+ground_bottom_color = Color(0.16159028, 0.1769053, 0.19109711, 1)
+ground_curve = 0.030314352
 
 [sub_resource type="Sky" id="Sky_or4gs"]
-sky_material = SubResource("ProceduralSkyMaterial_e28qv")
+sky_material = SubResource("ProceduralSkyMaterial_0450b")
 
 [sub_resource type="Environment" id="Environment_xpbee"]
 background_mode = 2
@@ -56,22 +58,19 @@ size = 55.0
 near = 0.003
 far = 1200.0
 
-[node name="MarchingSquaresTerrain" type="Node3D" parent="SubViewportContainer/SubViewport" unique_id=1979600537]
+[node name="MarchingSquaresTerrain" type="Node3D" parent="SubViewportContainer/SubViewport" unique_id=36914977]
 script = ExtResource("3_0450b")
-data_directory = "res://scenes/mst_demo_scene_TerrainData/MarchingSquaresTerrain_63056bd6/"
-_terrain_uid = "63056bd6"
+data_directory = "res://scenes/mst_demo_scene_TerrainData/MarchingSquaresTerrain_de9a244b/"
+_terrain_uid = "de9a244b"
 _storage_initialized = true
-texture_scale_3 = 0.9
-texture_scale_7 = 0.9
-texture_scale_9 = 1.1
-texture_scale_12 = 0.9
-texture_scale_13 = 0.7
+texture_scale_4 = 1.1
+texture_scale_11 = 1.1
 metadata/_custom_type_script = "uid://cddg1xr5hye1d"
 
-[node name="Chunk (0, 0)" type="MeshInstance3D" parent="SubViewportContainer/SubViewport/MarchingSquaresTerrain" unique_id=1442882813 node_paths=PackedStringArray("terrain_system")]
+[node name="Chunk (0, 0)" type="MeshInstance3D" parent="SubViewportContainer/SubViewport/MarchingSquaresTerrain" unique_id=249089838 node_paths=PackedStringArray("terrain_system")]
 script = ExtResource("4_0xhur")
 terrain_system = NodePath("..")
 
-[node name="GrassPlanter" type="MultiMeshInstance3D" parent="SubViewportContainer/SubViewport/MarchingSquaresTerrain/Chunk (0, 0)" unique_id=329087019]
+[node name="GrassPlanter" type="MultiMeshInstance3D" parent="SubViewportContainer/SubViewport/MarchingSquaresTerrain/Chunk (0, 0)" unique_id=382918471]
 cast_shadow = 0
 script = ExtResource("5_rcx4y")
