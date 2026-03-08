@@ -195,20 +195,6 @@ func _notification(what: int) -> void:
 							shape_child.owner = null
 
 
-func _enter_tree():
-	if Engine.is_editor_hint():
-		call_deferred("_editor_refresh")
-
-
-func _editor_refresh():
-	if not needs_update:
-		return
-	for z in range(needs_update.size()):
-		for x in range(needs_update[z].size()):
-			needs_update[z][x] = true
-	regenerate_mesh(false)
-
-
 func _exit_tree() -> void:
 	# Clear temp references
 	_temp_height_map = []

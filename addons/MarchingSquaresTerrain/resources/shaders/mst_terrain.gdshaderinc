@@ -208,6 +208,57 @@ vec4 sample_wall_by_index(int index, vec2 uv) {
 	return sample_material_by_index(index, uv);
 }
 
+void calculate_blend_weights(vec4 vc0, vec4 vc1, float sharpness, out float weights[16]) {
+	// Calculate raw weights from vertex color products
+	float raw_weights[16];
+	raw_weights[0]  = vc0.r * vc1.r;
+	raw_weights[1]  = vc0.r * vc1.g;
+	raw_weights[2]  = vc0.r * vc1.b;
+	raw_weights[3]  = vc0.r * vc1.a;
+	raw_weights[4]  = vc0.g * vc1.r;
+	raw_weights[5]  = vc0.g * vc1.g;
+	raw_weights[6]  = vc0.g * vc1.b;
+	raw_weights[7]  = vc0.g * vc1.a;
+	raw_weights[8]  = vc0.b * vc1.r;
+	raw_weights[9]  = vc0.b * vc1.g;
+	raw_weights[10] = vc0.b * vc1.b;
+	raw_weights[11] = vc0.b * vc1.a;
+	raw_weights[12] = vc0.a * vc1.r;
+	raw_weights[13] = vc0.a * vc1.g;
+	raw_weights[14] = vc0.a * vc1.b;
+	raw_weights[15] = vc0.a * vc1.a;
+
+	// Apply sharpness via power function
+	// float power = 1.0 + sharpness * 2.0;
+	float power = 2.0 + sharpness * 2.0;
+	float total = 0.0;
+
+	for (int i = 0; i < 16; i++) {
+		weights[i] = pow(max(raw_weights[i], 0.0), power);
+		total += weights[i];
+	}
+
+	// Normalize weights
+	if (total > 0.001) {
+		for (int i = 0; i < 16; i++) {
+			weights[i] /= total;
+		}
+	} else {
+		// Fallback: find dominant material
+		float max_raw = 0.0;
+		int max_idx = 0;
+		for (int i = 0; i < 16; i++) {
+			if (raw_weights[i] > max_raw) {
+				max_raw = raw_weights[i];
+				max_idx = i;
+			}
+		}
+		for (int i = 0; i < 16; i++) {
+			weights[i] = (i == max_idx) ? 1.0 : 0.0;
+		}
+	}
+}
+
 // Snap interpolated color to dominant channel (prevents bleeding between encodings)
 // When GPU interpolates vertex colors across triangles at floor/wall boundaries,
 // This snaps back to the single dominant channel.
@@ -231,6 +282,7 @@ vec4 blend_wall_materials(vec2 uv, vec4 vc0, vec4 vc1, float sharpness) {
 	vec4 snapped_vc1 = snap_to_dominant(vc1);
 
 	float weights[16];
+	calculate_blend_weights(snapped_vc0, snapped_vc1, sharpness, weights);
 
 	vec4 wall_color = vec4(0.0);
 	float total_weight = 0.0;
@@ -332,6 +384,7 @@ void fragment() {
 				float n = noise(world_pos.xz * blend_noise_scale);
 				effective_sharpness = mix(blend_sharpness, blend_sharpness * (0.5 + n), blend_noise_strength);
 			}
+			calculate_blend_weights(vc_color_0, vc_color_1, effective_sharpness, weights);
 
 			floor_color = vec4(0.0);
 			for (int i = 0; i < 16; i++) {
