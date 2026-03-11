@@ -59,7 +59,6 @@ far = 1200.0
 [node name="MarchingSquaresTerrain" type="Node3D" parent="SubViewportContainer/SubViewport" unique_id=1979600537]
 script = ExtResource("3_0450b")
 data_directory = "res://scenes/mst_demo_scene_TerrainData/MarchingSquaresTerrain_63056bd6/"
-_terrain_uid = "63056bd6"
 _storage_initialized = true
 texture_scale_3 = 0.9
 texture_scale_7 = 0.9

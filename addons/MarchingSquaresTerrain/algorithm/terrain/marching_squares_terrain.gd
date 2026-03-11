@@ -25,19 +25,17 @@ enum StorageMode {
 				for chunk in chunks.values():
 					chunk.mark_dirty()
 			print_verbose("[MST] Storage mode changed. All chunks marked for save.")
-
+		
 ## The folder where this terrain's data is saved. 
 ## If left empty, it automatically fills with a folder name relative to your scene file.
 ## Note: Manually setting a path locks the save location even if you rename the terrain node later.
 @export_dir var data_directory : String = "":
-	set(value):
-		if Engine.is_editor_hint() and value.is_empty():
-			var auto_path := MSTDataHandler.get_data_directory(self)
+	get():
+		if Engine.is_editor_hint() and data_directory.is_empty():
+			var auto_path := MSTDataHandler.generate_data_directory(self)
 			if not auto_path.is_empty():
 				data_directory = auto_path
-				notify_property_list_changed()
-				return
-		data_directory = value
+		return data_directory
 
 @export_category("Runtime Baking")
 ## If this option is true, the textures will be baked into a texture atlas
@@ -51,10 +49,6 @@ enum StorageMode {
 
 ## Used for overriding the material of the baked terrain texture.
 @export var bake_material_override : Material
-
-## Unique identifier for this terrain instance (auto-generated on first save).
-## Prevents path collisions when nodes are recreated with the same name.
-@export_storage var _terrain_uid : String = ""
 
 ## True after external storage has been initialized.
 ## Used to detect when migration from embedded data is needed.
@@ -498,9 +492,8 @@ func _init() -> void:
 	var base_grass_mesh := preload("uid://h41fuxldpf1u")
 	grass_mesh = base_grass_mesh.duplicate(true)
 	grass_mesh.material = base_grass_mesh.material.duplicate(true)
-	print_verbose("Terrain UID: ", _terrain_uid)
 	print_verbose("Last storage mode: ", _last_storage_mode)
-
+	
 
 func _notification(what: int) -> void:
 	# Save all dirty chunks to external storage before scene save
@@ -510,18 +503,20 @@ func _notification(what: int) -> void:
 
 
 func _enter_tree() -> void:
-	call_deferred("_deferred_enter_tree")
+	_deferred_enter_tree.call_deferred()
 
 
 func _initialize_data_directory() -> void:
 	if Engine.is_editor_hint() and data_directory.is_empty():
-		var auto_path := MSTDataHandler.get_data_directory(self)
+		var auto_path := MSTDataHandler.generate_data_directory(self)
 		if not auto_path.is_empty():
 			data_directory = auto_path
 
 
 func _deferred_enter_tree() -> void:
 	_initialize_data_directory()
+	
+	print_verbose("Terrain data dir: ", data_directory)
 	
 	# Apply all persisted textures/colors to this terrain's unique shader materials
 	# This is needed because _init() creates fresh duplicated materials that don't have

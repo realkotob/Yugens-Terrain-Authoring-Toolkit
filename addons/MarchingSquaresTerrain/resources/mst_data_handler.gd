@@ -33,43 +33,29 @@ static func ensure_directory_exists(path: String) -> bool:
 
 ## Get the resolved data directory path for the terrain node.
 ## Path format: [SceneDir]/[SceneName]_TerrainData/[NodeName]_[data_UID]/
-static func get_data_directory(terrain: MarchingSquaresTerrain) -> String:
-	var dir_path := terrain.data_directory
+static func generate_data_directory(terrain: MarchingSquaresTerrain) -> String:
+	# generate default path based on scene location with unique data_UID
+	var tree := terrain.get_tree()
+	if not tree:
+		return ""  # Node not in scene tree yet
 	
-	# If empty, generate default path based on scene location with unique data_UID
-	if dir_path.is_empty():
-		var tree := terrain.get_tree()
-		if not tree:
-			return ""  # Node not in scene tree yet
-		
-		var scene_root := tree.edited_scene_root if Engine.is_editor_hint() else tree.current_scene
-		if not scene_root or scene_root.scene_file_path.is_empty():
-			return ""
-		
-		# Generate our own data_UID if not set 
-		if terrain._terrain_uid.is_empty():
-			terrain._terrain_uid = generate_terrain_uid()
-		
-		var scene_path := scene_root.scene_file_path
-		var scene_dir := scene_path.get_base_dir()
-		var scene_name := scene_path.get_file().get_basename()
-		# Include data_UID in path to prevent collisions when nodes are recreated with same name
-		dir_path = scene_dir.path_join(scene_name + "_TerrainData").path_join(terrain.name + "_" + terrain._terrain_uid) + "/"
+	var scene_root := tree.edited_scene_root if Engine.is_editor_hint() else tree.current_scene
+	if not scene_root or scene_root.scene_file_path.is_empty():
+		return ""
 	
-	# Ensure path ends with /
-	if not dir_path.is_empty() and not dir_path.ends_with("/"):
-		dir_path += "/"
-	
-	return dir_path
+	var scene_path := scene_root.scene_file_path
+	var scene_dir := scene_path.get_base_dir()
+	var scene_name := scene_path.get_file().get_basename()
+	# Include data_UID in path to prevent collisions when nodes are recreated with same name
+	return scene_dir.path_join(scene_name + "_TerrainData").path_join(terrain.name + "_" + generate_terrain_uid())
 
 
 ## Check if metadata.res exists for a chunk.
-static func metadata_exists(terrain: MarchingSquaresTerrain, coords: Vector2i) -> bool:
-	var dir_path := get_data_directory(terrain)
+static func metadata_exists(dir_path: String, coords: Vector2i) -> bool:
 	if dir_path.is_empty():
 		return false
-	var chunk_dir := dir_path + "chunk_%d_%d/" % [coords.x, coords.y]
-	return FileAccess.file_exists(chunk_dir + "metadata.res")
+	var chunk_dir := dir_path.path_join("chunk_%d_%d" % [coords.x, coords.y])
+	return FileAccess.file_exists(chunk_dir.path_join("metadata.res"))
 
 #endregion
 
@@ -78,7 +64,8 @@ static func metadata_exists(terrain: MarchingSquaresTerrain, coords: Vector2i) -
 ## Save all dirty chunks to external .res files.
 ## Called from terrain._notification(NOTIFICATION_EDITOR_PRE_SAVE).
 static func save_all_chunks(terrain: MarchingSquaresTerrain) -> void:
-	var dir_path := get_data_directory(terrain)
+	
+	var dir_path := terrain.data_directory
 	if dir_path.is_empty():
 		# No valid data directory - scene might not be saved yet
 		return
@@ -101,7 +88,7 @@ static func save_all_chunks(terrain: MarchingSquaresTerrain) -> void:
 		
 		# Determine if chunk needs saving:
 		var needs_save : bool = chunk._data_dirty
-		if not needs_save and not metadata_exists(terrain, chunk_coords):
+		if not needs_save and not metadata_exists(dir_path, chunk_coords):
 			needs_save = true
 		
 		if needs_save:
@@ -124,13 +111,13 @@ static func save_all_chunks(terrain: MarchingSquaresTerrain) -> void:
 
 ## Save chunk data to external file.
 static func save_chunk_resources(terrain: MarchingSquaresTerrain, chunk: MarchingSquaresTerrainChunk) -> void:
-	var dir_path := get_data_directory(terrain)
+	var dir_path := terrain.data_directory
 	if dir_path.is_empty():
 		printerr("MSTDataHandler: Cannot save chunk - no valid data directory")
 		return
 	
 	var chunk_name := "chunk_%d_%d" % [chunk.chunk_coords.x, chunk.chunk_coords.y]
-	var chunk_dir := dir_path + chunk_name + "/"
+	var chunk_dir := dir_path.path_join(chunk_name)
 	ensure_directory_exists(chunk_dir)
 	
 	# Export chunk data 
@@ -148,7 +135,7 @@ static func save_chunk_resources(terrain: MarchingSquaresTerrain, chunk: Marchin
 	if not is_baked_mode or not BAKE_COLLISION:
 		data.collision_faces = PackedVector3Array()
 	
-	var metadata_path := chunk_dir + "metadata.res"
+	var metadata_path := chunk_dir.path_join("metadata.res")
 	var err := ResourceSaver.save(data, metadata_path, ResourceSaver.FLAG_COMPRESS)
 	if err != OK:
 		printerr("MSTDataHandler: Failed to save metadata to ", metadata_path)
@@ -161,7 +148,8 @@ static func save_chunk_resources(terrain: MarchingSquaresTerrain, chunk: Marchin
 
 ## Load all terrain data from external files.
 static func load_terrain_data(terrain: MarchingSquaresTerrain) -> void:
-	var dir_path := get_data_directory(terrain)
+	var dir_path := terrain.data_directory
+	print_verbose("MSTDataHandler: load_terrain_data")
 	if dir_path.is_empty():
 		return
 	
@@ -194,9 +182,9 @@ static func load_terrain_data(terrain: MarchingSquaresTerrain) -> void:
 
 ## Load a single chunk's source data from metadata file.
 static func load_chunk_from_directory(terrain: MarchingSquaresTerrain, coords: Vector2i) -> void:
-	var dir_path := get_data_directory(terrain)
+	var dir_path := terrain.data_directory
 	var chunk_name := "chunk_%d_%d" % [coords.x, coords.y]
-	var chunk_dir := dir_path + chunk_name + "/"
+	var chunk_dir := dir_path.path_join(chunk_name)
 	
 	# Mesh, collision, and grass are regenerated separately by the chunk
 	var chunk : MarchingSquaresTerrainChunk = terrain.chunks.get(coords)
@@ -204,7 +192,7 @@ static func load_chunk_from_directory(terrain: MarchingSquaresTerrain, coords: V
 		return
 	
 	# Load metadata source data
-	var metadata_path := chunk_dir + "metadata.res"
+	var metadata_path := chunk_dir.path_join("metadata.res")
 	if ResourceLoader.exists(metadata_path):
 		var data : MSTChunkData = load(metadata_path)
 		if data:
@@ -329,7 +317,7 @@ static func needs_migration(terrain: MarchingSquaresTerrain) -> bool:
 		return false
 	
 	# Check if any chunks have embedded data but no external files exist
-	var dir_path := get_data_directory(terrain)
+	var dir_path := terrain.data_directory
 	if dir_path.is_empty():
 		return false
 	
@@ -337,7 +325,7 @@ static func needs_migration(terrain: MarchingSquaresTerrain) -> bool:
 		var chunk : MarchingSquaresTerrainChunk = terrain.chunks[chunk_coords]
 		# Check if chunk has embedded data (height_map populated)
 		if chunk.height_map and not chunk.height_map.is_empty():
-			if not metadata_exists(terrain, chunk_coords):
+			if not metadata_exists(dir_path, chunk_coords):
 				return true
 	
 	return false
@@ -355,7 +343,7 @@ static func migrate_to_external_storage(terrain: MarchingSquaresTerrain) -> void
 	
 	save_all_chunks(terrain)
 	
-	print("MSTDataHandler: Migration complete. External data saved to: ", get_data_directory(terrain))
+	print("MSTDataHandler: Migration complete. External data saved to: ", terrain.data_directory)
 
 #endregion
 
@@ -363,7 +351,7 @@ static func migrate_to_external_storage(terrain: MarchingSquaresTerrain) -> void
 
 ## Clean up orphaned chunk directories that no longer exist in the scene.
 static func cleanup_orphaned_chunk_files(terrain: MarchingSquaresTerrain) -> void:
-	var dir_path := get_data_directory(terrain)
+	var dir_path := terrain.data_directory
 	if dir_path.is_empty():
 		return
 	
@@ -383,7 +371,7 @@ static func cleanup_orphaned_chunk_files(terrain: MarchingSquaresTerrain) -> voi
 				var coords := Vector2i(int(parts[0]), int(parts[1]))
 				# If chunk doesn't exist in scene, mark for deletion
 				if not terrain.chunks.has(coords):
-					orphaned_dirs.append(dir_path + folder_name + "/")
+					orphaned_dirs.append(dir_path.path_join(folder_name))
 		folder_name = dir.get_next()
 	dir.list_dir_end()
 	
@@ -481,14 +469,13 @@ static func cleanup_orphaned_terrain_directories(terrain: MarchingSquaresTerrain
 	var scene_path := scene_root.scene_file_path
 	var scene_dir := scene_path.get_base_dir()
 	var scene_name := scene_path.get_file().get_basename()
-	var terrain_data_dir := scene_dir.path_join(scene_name + "_TerrainData") + "/"
+	var terrain_data_dir := scene_dir.path_join(scene_name + "_TerrainData")
 	
 	if not DirAccess.dir_exists_absolute(terrain_data_dir):
 		return
 	
 	# Collect all terrain data_UID currently in the scene
-	var active_uids : Array[String] = []
-	_collect_terrain_uids_recursive(scene_root, active_uids)
+	var active_dirs : Dictionary[String, bool] = _collect_terrain_dirs_recursive(scene_root)
 	
 	# Scan terrain data directory for orphaned folders
 	var dir := DirAccess.open(terrain_data_dir)
@@ -500,12 +487,9 @@ static func cleanup_orphaned_terrain_directories(terrain: MarchingSquaresTerrain
 	var folder_name := dir.get_next()
 	while folder_name != "":
 		if dir.current_is_dir():
-			# Extract data_UID from folder name (format: NodeName_data_UID)
-			var underscore_pos := folder_name.rfind("_")
-			if underscore_pos > 0:
-				var uid := folder_name.substr(underscore_pos + 1)
-				if not active_uids.has(uid):
-					orphaned_dirs.append(terrain_data_dir + folder_name + "/")
+			var res_name := terrain_data_dir.path_join(folder_name).simplify_path()
+			if not active_dirs.has(res_name):
+				orphaned_dirs.append(res_name)
 		folder_name = dir.get_next()
 	dir.list_dir_end()
 	
@@ -515,14 +499,16 @@ static func cleanup_orphaned_terrain_directories(terrain: MarchingSquaresTerrain
 		print("MSTDataHandler: Cleaned up orphaned terrain data at ", orphaned_dir)
 
 
-## Recursively collect terrain UIDs from scene tree.
-static func _collect_terrain_uids_recursive(node: Node, uids: Array[String]) -> void:
-	if node is MarchingSquaresTerrain and not node._terrain_uid.is_empty():
-		if not uids.has(node._terrain_uid):
-			uids.append(node._terrain_uid)
+## Recursively collect terrain data dirs from scene tree.
+static func _collect_terrain_dirs_recursive(node: Node, dirs: Dictionary[String, bool] = {}) -> Dictionary[String, bool]:
+	var terrain := node as MarchingSquaresTerrain
+	if terrain and not terrain.data_directory.is_empty():
+		if not dirs.has(terrain.data_directory):
+			dirs.set(terrain.data_directory.simplify_path(), true)
 	
 	for child in node.get_children():
-		_collect_terrain_uids_recursive(child, uids)
+		_collect_terrain_dirs_recursive(child, dirs)
+	return dirs
 
 
 ## Delete a directory and all its contents recursively.
@@ -535,7 +521,7 @@ static func _delete_directory_recursive(dir_path: String) -> void:
 	var item_name := dir.get_next()
 	while item_name != "":
 		if dir.current_is_dir():
-			_delete_directory_recursive(dir_path + item_name + "/")
+			_delete_directory_recursive(dir_path.path_join(item_name))
 		else:
 			dir.remove(item_name)
 		item_name = dir.get_next()
