@@ -527,6 +527,11 @@ func _deferred_enter_tree() -> void:
 	chunks.clear()
 	for chunk in get_children():
 		if chunk is MarchingSquaresTerrainChunk:
+			if chunk._data_dirty:
+				return
+				
+	for chunk in get_children():
+		if chunk is MarchingSquaresTerrainChunk:
 			chunks[chunk.chunk_coords] = chunk
 			chunk.terrain_system = self
 			chunk.grass_planter = null
