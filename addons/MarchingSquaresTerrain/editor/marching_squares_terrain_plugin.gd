@@ -311,8 +311,7 @@ func handle_mouse(camera: Camera3D, event: InputEvent) -> int:
 	terrain_hovered = false
 	var terrain : MarchingSquaresTerrain = EditorInterface.get_selection().get_selected_nodes()[0]
 	
-	var editor_viewport := EditorInterface.get_editor_viewport_3d()
-	var mouse_pos := editor_viewport.get_mouse_position()	
+	var mouse_pos := camera.get_viewport().get_mouse_position()
 	
 	var _ray_origin := camera.project_ray_origin(mouse_pos)
 	var _ray_dir := camera.project_ray_normal(mouse_pos)
@@ -454,8 +453,9 @@ func handle_mouse(camera: Camera3D, event: InputEvent) -> int:
 	var intersection := chunk_plane.intersects_ray(_ray_origin, _ray_dir)
 	
 	if intersection:
-		var chunk_x : int = floor(intersection.x / (terrain.dimensions.x * terrain.cell_size.x))
-		var chunk_z : int = floor(intersection.z / (terrain.dimensions.z * terrain.cell_size.y))
+		var chunk_x : int = floor(intersection.x / ((terrain.dimensions.x-1) * terrain.cell_size.x))
+		var chunk_z : int = floor(intersection.z / ((terrain.dimensions.z-1) * terrain.cell_size.y))
+		
 		var chunk_coords := Vector2i(chunk_x, chunk_z)
 		var chunk = terrain.chunks.get(chunk_coords)
 		
