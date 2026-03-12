@@ -127,7 +127,7 @@ func show_tool_attributes(tool_index: int) -> void:
 	add_child(hbox_container)
 	last_setting_type = SettingType.ERROR # Reset the setting type for correct VSeparators
 	
-	plugin.gizmo_plugin.terrain_gizmo._redraw()
+	plugin.gizmo_plugin.trigger_redraw(plugin.current_terrain_node)
 
 
 func add_setting(p_params: Dictionary) -> void:
@@ -660,7 +660,7 @@ func _on_chunk_selected(option_button: OptionButton, p_chunk: String) -> void:
 	selected_chunk = plugin.current_terrain_node.find_child(p_chunk)
 	plugin.selected_chunk = selected_chunk
 	
-	plugin.gizmo_plugin.terrain_gizmo._redraw()
+	plugin.gizmo_plugin.trigger_redraw(terrain)
 
 
 func _apply_mode_to_all_chunks() -> void:

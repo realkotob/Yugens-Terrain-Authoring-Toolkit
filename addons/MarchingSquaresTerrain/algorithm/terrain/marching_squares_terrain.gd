@@ -597,7 +597,7 @@ func remove_chunk(x: int, z: int, plugin: MarchingSquaresTerrainPlugin):
 				plugin.selected_chunk = child
 				break
 	plugin.ui.tool_attributes.show_tool_attributes(plugin.TerrainToolMode.CHUNK_MANAGEMENT)
-	plugin.gizmo_plugin.terrain_gizmo._redraw()
+	plugin.gizmo_plugin.trigger_redraw(self)
 
 
 # Remove a chunk but still keep it in memory (so that undo can restore it)
@@ -618,11 +618,10 @@ func remove_chunk_from_tree(x: int, z: int, plugin: MarchingSquaresTerrainPlugin
 				plugin.selected_chunk = child
 				break
 	plugin.ui.tool_attributes.show_tool_attributes(plugin.TerrainToolMode.CHUNK_MANAGEMENT)
-	plugin.gizmo_plugin.terrain_gizmo._redraw()
+	plugin.gizmo_plugin.trigger_redraw(self)
 
 
 func add_chunk(coords: Vector2i, chunk: MarchingSquaresTerrainChunk, plugin: MarchingSquaresTerrainPlugin, regenerate_mesh: bool = true):
-	chunks[coords] = chunk
 	chunk.terrain_system = self
 	chunk.chunk_coords = coords
 	chunk._skip_save_on_exit = false  # Reset flag when chunk is re-added (undo restores chunk)
@@ -649,7 +648,7 @@ func add_chunk(coords: Vector2i, chunk: MarchingSquaresTerrainChunk, plugin: Mar
 	if plugin.selected_chunk and plugin.selected_chunk.chunk_coords == Vector2i(99999, 99999):
 		plugin.selected_chunk = chunk
 	plugin.ui.tool_attributes.show_tool_attributes(plugin.TerrainToolMode.CHUNK_MANAGEMENT)
-	plugin.gizmo_plugin.terrain_gizmo._redraw()
+	plugin.gizmo_plugin.trigger_redraw(self)
 
 
 func _set_owner_recursive(node: Node, _owner: Node) -> void:
