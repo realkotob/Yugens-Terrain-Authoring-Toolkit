@@ -50,6 +50,22 @@ static func generate_data_directory(terrain: MarchingSquaresTerrain) -> String:
 	return scene_dir.path_join(scene_name + "_TerrainData").path_join(terrain.name + "_" + generate_terrain_uid())
 
 
+## Check if a terrains data directory is unique
+static func is_data_directory_unique(terrain: MarchingSquaresTerrain) -> bool:
+	if not (Engine.is_editor_hint() and terrain.is_inside_tree()):
+		return true
+	var scene_root := terrain.get_tree().edited_scene_root
+	var dirs := _collect_terrain_dirs_recursive(scene_root)
+
+	var simplified_path := terrain.data_directory.simplify_path()
+	if not dirs.has(simplified_path):
+		return true
+	match dirs[simplified_path].size():
+		0: return true
+		1: return dirs[simplified_path][0] == terrain
+		_: return false
+
+
 ## Check if metadata.res exists for a chunk.
 static func metadata_exists(dir_path: String, coords: Vector2i) -> bool:
 	if dir_path.is_empty():
@@ -475,7 +491,7 @@ static func cleanup_orphaned_terrain_directories(terrain: MarchingSquaresTerrain
 		return
 	
 	# Collect all terrain data_UID currently in the scene
-	var active_dirs : Dictionary[String, bool] = _collect_terrain_dirs_recursive(scene_root)
+	var active_dirs : Dictionary[String, Array] = _collect_terrain_dirs_recursive(scene_root)
 	
 	# Scan terrain data directory for orphaned folders
 	var dir := DirAccess.open(terrain_data_dir)
@@ -500,12 +516,14 @@ static func cleanup_orphaned_terrain_directories(terrain: MarchingSquaresTerrain
 
 
 ## Recursively collect terrain data dirs from scene tree.
-static func _collect_terrain_dirs_recursive(node: Node, dirs: Dictionary[String, bool] = {}) -> Dictionary[String, bool]:
+static func _collect_terrain_dirs_recursive(node: Node, dirs: Dictionary[String, Array] = {}) -> Dictionary[String, Array]:
 	var terrain := node as MarchingSquaresTerrain
 	if terrain and not terrain.data_directory.is_empty():
-		if not dirs.has(terrain.data_directory):
-			dirs.set(terrain.data_directory.simplify_path(), true)
-	
+		var simplified_path := terrain.data_directory.simplify_path()
+		if not dirs.has(simplified_path):
+			dirs.set(simplified_path, [terrain])
+		else:
+			dirs[simplified_path].append(terrain)
 	for child in node.get_children():
 		_collect_terrain_dirs_recursive(child, dirs)
 	return dirs

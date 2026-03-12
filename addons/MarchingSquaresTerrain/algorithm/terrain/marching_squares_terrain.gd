@@ -507,7 +507,7 @@ func _enter_tree() -> void:
 
 
 func _initialize_data_directory() -> void:
-	if Engine.is_editor_hint() and data_directory.is_empty():
+	if Engine.is_editor_hint() and (data_directory.is_empty() or not MSTDataHandler.is_data_directory_unique(self)):
 		var auto_path := MSTDataHandler.generate_data_directory(self)
 		if not auto_path.is_empty():
 			data_directory = auto_path
