@@ -47,6 +47,7 @@ func _commit_handle(handle_id: int, secondary: bool, restore: Variant, cancel: b
 	
 	if cancel:
 		terrain.height_map[z][x] = restore
+		terrain.mark_dirty()
 	else:
 		var undo_redo := MarchingSquaresTerrainPlugin.instance.get_undo_redo()
 		
@@ -64,6 +65,7 @@ func move_terrain_point(terrain: MarchingSquaresTerrainChunk, handle_id: int, he
 	var z = handle_id / terrain.dimensions.z
 	var x = handle_id % terrain.dimensions.z
 	terrain.height_map[z][x] = height
+	terrain.mark_dirty()
 	
 	notify_needs_update(terrain, z, x)
 	notify_needs_update(terrain, z, x-1)
@@ -75,9 +77,8 @@ func move_terrain_point(terrain: MarchingSquaresTerrainChunk, handle_id: int, he
 
 
 func notify_needs_update(terrain: MarchingSquaresTerrainChunk, z: int, x: int):
-	if z < 0 or z >= terrain.dimensions.z or x < 0 or x > terrain.dimensions.x:
+	if z < 0 or z >= terrain.dimensions.z-1 or x < 0 or x >= terrain.dimensions.x-1:
 		return
-	
 	terrain.needs_update[z][x] = true
 
 
@@ -101,4 +102,5 @@ func _set_handle(handle_id: int, secondary: bool, camera: Camera3D, screen_pos: 
 	if intersection:
 		intersection = terrain.to_local(intersection)
 		terrain.height_map[z][x] = intersection.y
+		terrain.mark_dirty()
 		terrain.update_gizmos()

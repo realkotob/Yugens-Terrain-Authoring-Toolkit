@@ -274,8 +274,7 @@ func _edit(object: Object) -> void:
 		current_draw_pattern.clear()
 		is_drawing = false
 		draw_height_set = false
-		if gizmo_plugin.terrain_gizmo:
-			gizmo_plugin.terrain_gizmo.clear()
+		gizmo_plugin.clear()
 
 
 # This function handles the mouse click in the 3D viewport
@@ -311,8 +310,7 @@ func handle_mouse(camera: Camera3D, event: InputEvent) -> int:
 	terrain_hovered = false
 	var terrain : MarchingSquaresTerrain = EditorInterface.get_selection().get_selected_nodes()[0]
 	
-	var editor_viewport := EditorInterface.get_editor_viewport_3d()
-	var mouse_pos := editor_viewport.get_mouse_position()	
+	var mouse_pos := camera.get_viewport().get_mouse_position()
 	
 	var _ray_origin := camera.project_ray_origin(mouse_pos)
 	var _ray_dir := camera.project_ray_normal(mouse_pos)
@@ -418,7 +416,7 @@ func handle_mouse(camera: Camera3D, event: InputEvent) -> int:
 						draw_height = brush_position.y
 					else:
 						current_draw_pattern.clear()
-			gizmo_plugin.terrain_gizmo._redraw()
+			gizmo_plugin.trigger_redraw(terrain)
 			return EditorPlugin.AFTER_GUI_INPUT_STOP
 		
 		# Adjust brush size
@@ -431,13 +429,13 @@ func handle_mouse(camera: Camera3D, event: InputEvent) -> int:
 				brush_size += (0.5 * size_scale_factor) * factor
 				if brush_size > 50 * size_scale_factor:
 					brush_size = 50 * size_scale_factor
-				gizmo_plugin.terrain_gizmo._redraw()
+				gizmo_plugin.trigger_redraw(terrain)
 				return EditorPlugin.AFTER_GUI_INPUT_STOP
 			elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 				brush_size -= (0.5 * size_scale_factor) * factor
 				if brush_size < 1.0 * size_scale_factor:
 					brush_size = 1.0 * size_scale_factor
-				gizmo_plugin.terrain_gizmo._redraw()
+				gizmo_plugin.trigger_redraw(terrain)
 				return EditorPlugin.AFTER_GUI_INPUT_STOP
 		
 		if draw_area_hovered and event is InputEventMouseMotion:
@@ -446,7 +444,7 @@ func handle_mouse(camera: Camera3D, event: InputEvent) -> int:
 				draw_pattern(terrain)
 				current_draw_pattern.clear()
 		
-		gizmo_plugin.terrain_gizmo._redraw()
+		gizmo_plugin.trigger_redraw(terrain)
 		return EditorPlugin.AFTER_GUI_INPUT_PASS
 	
 	# Check for hovering over/clicking a new chunk
@@ -454,8 +452,9 @@ func handle_mouse(camera: Camera3D, event: InputEvent) -> int:
 	var intersection := chunk_plane.intersects_ray(_ray_origin, _ray_dir)
 	
 	if intersection:
-		var chunk_x : int = floor(intersection.x / (terrain.dimensions.x * terrain.cell_size.x))
-		var chunk_z : int = floor(intersection.z / (terrain.dimensions.z * terrain.cell_size.y))
+		var chunk_x : int = floor(intersection.x / ((terrain.dimensions.x-1) * terrain.cell_size.x))
+		var chunk_z : int = floor(intersection.z / ((terrain.dimensions.z-1) * terrain.cell_size.y))
+		
 		var chunk_coords := Vector2i(chunk_x, chunk_z)
 		var chunk = terrain.chunks.get(chunk_coords)
 		
@@ -491,7 +490,7 @@ func handle_mouse(camera: Camera3D, event: InputEvent) -> int:
 					get_undo_redo().commit_action()
 					return EditorPlugin.AFTER_GUI_INPUT_STOP
 		
-		gizmo_plugin.terrain_gizmo._redraw()
+		gizmo_plugin.trigger_redraw(terrain)
 	else:
 		is_chunk_plane_hovered = false
 	

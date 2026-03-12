@@ -25,19 +25,17 @@ enum StorageMode {
 				for chunk in chunks.values():
 					chunk.mark_dirty()
 			print_verbose("[MST] Storage mode changed. All chunks marked for save.")
-
+		
 ## The folder where this terrain's data is saved. 
 ## If left empty, it automatically fills with a folder name relative to your scene file.
 ## Note: Manually setting a path locks the save location even if you rename the terrain node later.
 @export_dir var data_directory : String = "":
-	set(value):
-		if Engine.is_editor_hint() and value.is_empty():
-			var auto_path := MSTDataHandler.get_data_directory(self)
+	get():
+		if Engine.is_editor_hint() and data_directory.is_empty():
+			var auto_path := MSTDataHandler.generate_data_directory(self)
 			if not auto_path.is_empty():
 				data_directory = auto_path
-				notify_property_list_changed()
-				return
-		data_directory = value
+		return data_directory
 
 @export_category("Runtime Baking")
 ## If this option is true, the textures will be baked into a texture atlas
@@ -51,10 +49,6 @@ enum StorageMode {
 
 ## Used for overriding the material of the baked terrain texture.
 @export var bake_material_override : Material
-
-## Unique identifier for this terrain instance (auto-generated on first save).
-## Prevents path collisions when nodes are recreated with the same name.
-@export_storage var _terrain_uid : String = ""
 
 ## True after external storage has been initialized.
 ## Used to detect when migration from embedded data is needed.
@@ -498,9 +492,8 @@ func _init() -> void:
 	var base_grass_mesh := preload("uid://h41fuxldpf1u")
 	grass_mesh = base_grass_mesh.duplicate(true)
 	grass_mesh.material = base_grass_mesh.material.duplicate(true)
-	print_verbose("Terrain UID: ", _terrain_uid)
 	print_verbose("Last storage mode: ", _last_storage_mode)
-
+	
 
 func _notification(what: int) -> void:
 	# Save all dirty chunks to external storage before scene save
@@ -510,12 +503,12 @@ func _notification(what: int) -> void:
 
 
 func _enter_tree() -> void:
-	call_deferred("_deferred_enter_tree")
+	_deferred_enter_tree.call_deferred()
 
 
 func _initialize_data_directory() -> void:
-	if Engine.is_editor_hint() and data_directory.is_empty():
-		var auto_path := MSTDataHandler.get_data_directory(self)
+	if Engine.is_editor_hint() and (data_directory.is_empty() or not MSTDataHandler.is_data_directory_unique(self)):
+		var auto_path := MSTDataHandler.generate_data_directory(self)
 		if not auto_path.is_empty():
 			data_directory = auto_path
 
@@ -523,13 +516,20 @@ func _initialize_data_directory() -> void:
 func _deferred_enter_tree() -> void:
 	_initialize_data_directory()
 	
+	print_verbose("Terrain data dir: ", data_directory)
+	
+	# Populate chunks dictionary from scene children
+	for chunk in get_children():
+		if chunk is MarchingSquaresTerrainChunk:
+			if chunk._data_dirty:
+				return
+	chunks.clear()
+	
 	# Apply all persisted textures/colors to this terrain's unique shader materials
 	# This is needed because _init() creates fresh duplicated materials that don't have
 	# the terrain's saved texture values - only the base resource defaults
 	force_batch_update()
-	
-	# Populate chunks dictionary from scene children
-	chunks.clear()
+				
 	for chunk in get_children():
 		if chunk is MarchingSquaresTerrainChunk:
 			chunks[chunk.chunk_coords] = chunk
@@ -557,6 +557,7 @@ func add_new_chunk(chunk_x: int, chunk_z: int, plugin: MarchingSquaresTerrainPlu
 	var new_chunk := MarchingSquaresTerrainChunk.new()
 	new_chunk.name = "Chunk "+str(chunk_coords)
 	new_chunk.terrain_system = self
+	new_chunk.mark_dirty()
 	add_chunk(chunk_coords, new_chunk, plugin, false)
 	
 	var chunk_left : MarchingSquaresTerrainChunk = chunks.get(Vector2i(chunk_x-1, chunk_z))
@@ -597,7 +598,7 @@ func remove_chunk(x: int, z: int, plugin: MarchingSquaresTerrainPlugin):
 				plugin.selected_chunk = child
 				break
 	plugin.ui.tool_attributes.show_tool_attributes(plugin.TerrainToolMode.CHUNK_MANAGEMENT)
-	plugin.gizmo_plugin.terrain_gizmo._redraw()
+	plugin.gizmo_plugin.trigger_redraw(self)
 
 
 # Remove a chunk but still keep it in memory (so that undo can restore it)
@@ -618,16 +619,15 @@ func remove_chunk_from_tree(x: int, z: int, plugin: MarchingSquaresTerrainPlugin
 				plugin.selected_chunk = child
 				break
 	plugin.ui.tool_attributes.show_tool_attributes(plugin.TerrainToolMode.CHUNK_MANAGEMENT)
-	plugin.gizmo_plugin.terrain_gizmo._redraw()
+	plugin.gizmo_plugin.trigger_redraw(self)
 
 
 func add_chunk(coords: Vector2i, chunk: MarchingSquaresTerrainChunk, plugin: MarchingSquaresTerrainPlugin, regenerate_mesh: bool = true):
-	chunks[coords] = chunk
 	chunk.terrain_system = self
 	chunk.chunk_coords = coords
 	chunk._skip_save_on_exit = false  # Reset flag when chunk is re-added (undo restores chunk)
-	
 	add_child(chunk)
+	chunks[coords] = chunk
 	
 	# Use position instead of global_position to avoid "is_inside_tree()" errors
 	# when multiple scenes with MarchingSquaresTerrain are open in editor tabs.
@@ -649,7 +649,7 @@ func add_chunk(coords: Vector2i, chunk: MarchingSquaresTerrainChunk, plugin: Mar
 	if plugin.selected_chunk and plugin.selected_chunk.chunk_coords == Vector2i(99999, 99999):
 		plugin.selected_chunk = chunk
 	plugin.ui.tool_attributes.show_tool_attributes(plugin.TerrainToolMode.CHUNK_MANAGEMENT)
-	plugin.gizmo_plugin.terrain_gizmo._redraw()
+	plugin.gizmo_plugin.trigger_redraw(self)
 
 
 func _set_owner_recursive(node: Node, _owner: Node) -> void:
