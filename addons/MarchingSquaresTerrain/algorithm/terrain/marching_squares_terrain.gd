@@ -518,17 +518,17 @@ func _deferred_enter_tree() -> void:
 	
 	print_verbose("Terrain data dir: ", data_directory)
 	
-	# Apply all persisted textures/colors to this terrain's unique shader materials
-	# This is needed because _init() creates fresh duplicated materials that don't have
-	# the terrain's saved texture values - only the base resource defaults
-	force_batch_update()
-	
 	# Populate chunks dictionary from scene children
-	chunks.clear()
 	for chunk in get_children():
 		if chunk is MarchingSquaresTerrainChunk:
 			if chunk._data_dirty:
 				return
+	chunks.clear()
+	
+	# Apply all persisted textures/colors to this terrain's unique shader materials
+	# This is needed because _init() creates fresh duplicated materials that don't have
+	# the terrain's saved texture values - only the base resource defaults
+	force_batch_update()
 				
 	for chunk in get_children():
 		if chunk is MarchingSquaresTerrainChunk:
@@ -557,6 +557,7 @@ func add_new_chunk(chunk_x: int, chunk_z: int, plugin: MarchingSquaresTerrainPlu
 	var new_chunk := MarchingSquaresTerrainChunk.new()
 	new_chunk.name = "Chunk "+str(chunk_coords)
 	new_chunk.terrain_system = self
+	new_chunk.mark_dirty()
 	add_chunk(chunk_coords, new_chunk, plugin, false)
 	
 	var chunk_left : MarchingSquaresTerrainChunk = chunks.get(Vector2i(chunk_x-1, chunk_z))
@@ -625,8 +626,8 @@ func add_chunk(coords: Vector2i, chunk: MarchingSquaresTerrainChunk, plugin: Mar
 	chunk.terrain_system = self
 	chunk.chunk_coords = coords
 	chunk._skip_save_on_exit = false  # Reset flag when chunk is re-added (undo restores chunk)
-	
 	add_child(chunk)
+	chunks[coords] = chunk
 	
 	# Use position instead of global_position to avoid "is_inside_tree()" errors
 	# when multiple scenes with MarchingSquaresTerrain are open in editor tabs.

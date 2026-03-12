@@ -163,6 +163,7 @@ func _notification(what: int) -> void:
 					bodies_to_free.append(child)
 			# Free all bodies (after iteration to avoid modifying while iterating)
 			for body in bodies_to_free:
+				body.name += "_"
 				body.queue_free()
 		
 		NOTIFICATION_EDITOR_POST_SAVE:
@@ -183,7 +184,7 @@ func _notification(what: int) -> void:
 			
 			# Recreate ONE collision body (only need one, even if old scene had duplicates)
 			if not _temp_collision_shapes.is_empty():
-				call_deferred("_recreate_collision_body")
+				_recreate_collision_body.call_deferred()
 		
 		NOTIFICATION_PREDELETE:
 			# Safety cleanup - clear owner on ALL collision nodes
@@ -193,8 +194,12 @@ func _notification(what: int) -> void:
 					for shape_child in child.get_children():
 						if shape_child is CollisionShape3D:
 							shape_child.owner = null
-
-
+							
+func _enter_tree() -> void:
+	if get_parent() != terrain_system:
+		push_error("Chunk must remain within its parent!")
+	terrain_system.chunks[chunk_coords] = self
+			
 func _exit_tree() -> void:
 	# Clear temp references
 	_temp_height_map = []
@@ -583,11 +588,13 @@ func _recreate_collision_body() -> void:
 	_temp_collision_shapes.clear()
 	
 	var body := StaticBody3D.new()
+	body.name = name + "_col"
 	body.collision_layer = 17
 	if terrain_system:
 		body.set_collision_layer_value(terrain_system.extra_collision_layer, true)
 	
 	var col_shape := CollisionShape3D.new()
+	col_shape.name = "CollisionShape3D"
 	col_shape.shape = shape
 	col_shape.visible = false
 	body.add_child(col_shape)
