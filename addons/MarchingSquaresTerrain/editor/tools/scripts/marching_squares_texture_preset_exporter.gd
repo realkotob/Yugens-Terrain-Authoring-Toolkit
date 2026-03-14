@@ -3,8 +3,8 @@ extends Button
 class_name MarchingSquaresTexturePresetExporter
 
 
-const PRESET_DIR = "res://addons/MarchingSquaresTerrain/resources/texture presets/"
-const TEXTURE_NAMES = preload("res://addons/MarchingSquaresTerrain/resources/texture_names.tres")
+const PRESET_DIR = "res://addons/MarchingSquaresTerrain/resources/texture_presets/"
+const TEXTURE_NAMES = preload("uid://dd7fens03aosa")
 
 var current_terrain_node : MarchingSquaresTerrain
 
@@ -52,17 +52,17 @@ func _export_to_texture_preset() -> void:
 
 
 func _on_filename_confirmed() -> void:
-	var filename = filename_input.text.strip_edges().to_lower().to_snake_case()
+	var filename := filename_input.text.strip_edges().to_lower().to_snake_case()
 	
 	if filename == "":
 		push_error("Filename cannot be empty!")
 		return
 	
-	var dir = DirAccess.open("res://")
+	var dir := DirAccess.open("res://")
 	if not dir.dir_exists(PRESET_DIR):
 		dir.make_dir_recursive(PRESET_DIR)
 	
-	var path = PRESET_DIR + filename + ".tres"
+	var path := PRESET_DIR + filename + ".tres"
 	
 	if FileAccess.file_exists(path):
 		_show_overwrite_confirmation(path)
@@ -87,19 +87,14 @@ func _show_overwrite_confirmation(path: String) -> void:
 	confirm_dialog.popup_centered()
 
 
-func _show_success_notification():
-	if Engine.is_editor_hint():
-		EditorInterface.get_base_control().show_accept_dialog("Preset saved successfully!\nSaved to: " + PRESET_DIR, "Success")
-
-
 func _save_preset(path: String) -> void:
-	var new_tex_preset = MarchingSquaresTexturePreset.new()
+	var new_tex_preset := MarchingSquaresTexturePreset.new()
 	
 	new_tex_preset.preset_name = filename_input.text
 	new_tex_preset.new_textures = texture_preset_data
 	new_tex_preset.new_tex_names = TEXTURE_NAMES.duplicate()
 	
-	var save_error = ResourceSaver.save(new_tex_preset, path)
+	var save_error := ResourceSaver.save(new_tex_preset, path)
 	if save_error == OK:
 		print("Texture preset saved to: " + path)
 		EditorInterface.get_resource_filesystem().scan()
@@ -117,7 +112,7 @@ func _get_current_texture_data() -> MarchingSquaresTextureList:
 					var tex : Texture2D = Texture2D.new()
 					match i_tex:
 						0:
-							tex = current_terrain_node.ground_texture
+							tex = current_terrain_node.texture_1
 						1:
 							tex = current_terrain_node.texture_2
 						2:
@@ -187,7 +182,7 @@ func _get_current_texture_data() -> MarchingSquaresTextureList:
 					var tex : Texture2D = Texture2D.new()
 					match i_grass_tex:
 						0:
-							tex = current_terrain_node.grass_sprite
+							tex = current_terrain_node.grass_sprite_tex_1
 						1:
 							tex = current_terrain_node.grass_sprite_tex_2
 						2:
@@ -205,17 +200,17 @@ func _get_current_texture_data() -> MarchingSquaresTextureList:
 					var col : Color = Color.PURPLE
 					match i_grass_col:
 						0:
-							col = current_terrain_node.ground_color
+							col = current_terrain_node.texture_albedo_1
 						1:
-							col = current_terrain_node.ground_color_2
+							col = current_terrain_node.texture_albedo_2
 						2:
-							col = current_terrain_node.ground_color_3
+							col = current_terrain_node.texture_albedo_3
 						3:
-							col = current_terrain_node.ground_color_4
+							col = current_terrain_node.texture_albedo_4
 						4:
-							col = current_terrain_node.ground_color_5
+							col = current_terrain_node.texture_albedo_5
 						5:
-							col = current_terrain_node.ground_color_6
+							col = current_terrain_node.texture_albedo_6
 					if col != null:
 						new_texture_list.grass_colors[i_grass_col] = col
 			3: # has_grass

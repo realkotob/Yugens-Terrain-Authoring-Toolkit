@@ -9,44 +9,44 @@ var plugin : MarchingSquaresTerrainPlugin
 
 const VAR_NAMES : Array[Dictionary] = [
 	{
-		"tex_var": "ground_texture",
+		"tex_var": "texture_1",
 		"scale_var": "texture_scale_1",
-		"sprite_var": "grass_sprite",
-		"color_var": "ground_color",
+		"sprite_var": "grass_sprite_tex_1",
+		"color_var": "texture_albedo_1",
 	},
 	{
 		"tex_var": "texture_2",
 		"scale_var": "texture_scale_2",
 		"sprite_var": "grass_sprite_tex_2",
-		"color_var": "ground_color_2",
+		"color_var": "texture_albedo_2",
 		"use_grass_var": "tex2_has_grass",
 	},
 	{
 		"tex_var": "texture_3",
 		"scale_var": "texture_scale_3",
 		"sprite_var": "grass_sprite_tex_3",
-		"color_var": "ground_color_3",
+		"color_var": "texture_albedo_3",
 		"use_grass_var": "tex3_has_grass",
 	},
 	{
 		"tex_var": "texture_4",
 		"scale_var": "texture_scale_4",
 		"sprite_var": "grass_sprite_tex_4",
-		"color_var": "ground_color_4",
+		"color_var": "texture_albedo_4",
 		"use_grass_var": "tex4_has_grass",
 	},
 	{
 		"tex_var": "texture_5",
 		"scale_var": "texture_scale_5",
 		"sprite_var": "grass_sprite_tex_5",
-		"color_var": "ground_color_5",
+		"color_var": "texture_albedo_5",
 		"use_grass_var": "tex5_has_grass",
 	},
 	{
 		"tex_var": "texture_6",
 		"scale_var": "texture_scale_6",
 		"sprite_var": "grass_sprite_tex_6",
-		"color_var": "ground_color_6",
+		"color_var": "texture_albedo_6",
 		"use_grass_var": "tex6_has_grass",
 	},
 	{
@@ -101,7 +101,7 @@ func add_texture_settings() -> void:
 	
 	var terrain := plugin.current_terrain_node
 	
-	var vbox = VBoxContainer.new()
+	var vbox := VBoxContainer.new()
 	vbox.set_custom_minimum_size(Vector2(150, 0))
 	# Floor textures loop (15 slots)
 	for i in range(15):
@@ -193,7 +193,7 @@ func add_texture_settings() -> void:
 			c_pick_button.color_changed.connect(func(color): _on_texture_setting_changed(VAR_NAMES[i].get("color_var"), color))
 			c_pick_button.set_custom_minimum_size(Vector2(150, 25))
 			
-			var c_cont_2 = CenterContainer.new()
+			var c_cont_2 := CenterContainer.new()
 			c_cont_2.set_custom_minimum_size(Vector2(150, 30))
 			c_cont_2.add_child(c_pick_button, true)
 			vbox.add_child(c_cont_2, true)
@@ -208,7 +208,7 @@ func add_texture_settings() -> void:
 			checkbox.toggled.connect(func(pressed): _on_texture_setting_changed(VAR_NAMES[i].get("use_grass_var"), pressed))
 			checkbox.set_custom_minimum_size(Vector2(25, 15))
 			
-			var c_cont_2 = CenterContainer.new()
+			var c_cont_2 := CenterContainer.new()
 			c_cont_2.set_custom_minimum_size(Vector2(25, 25))
 			c_cont_2.add_child(checkbox, true)
 			vbox.add_child(c_cont_2, true)
@@ -217,7 +217,7 @@ func add_texture_settings() -> void:
 	
 	var m_cont := MarginContainer.new()
 	m_cont.add_theme_constant_override("margin_bottom", 7)
-	var export_button = MarchingSquaresTexturePresetExporter.new()
+	var export_button := MarchingSquaresTexturePresetExporter.new()
 	export_button.current_terrain_node = terrain
 	m_cont.add_child(export_button, true)
 	vbox.add_child(m_cont, true)

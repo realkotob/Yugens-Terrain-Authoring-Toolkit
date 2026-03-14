@@ -38,8 +38,8 @@ var strength : Dictionary = {
 	"name": "strength",
 	"type": "slider",
 	"label": "Strength",
-	"range": Vector3(0.1, 10.0, 0.1),
-	"default": 3.0,
+	"range": Vector3(0.025, 0.3, 0.005),
+	"default": 0.05,
 }
 
 var flatten : Dictionary = {
@@ -63,7 +63,7 @@ var mask_mode : Dictionary = {
 	"default": true,
 }
 
-var vp_tex_names : MarchingSquaresTextureNames = preload("res://addons/MarchingSquaresTerrain/resources/texture_names.tres")
+var vp_tex_names : MarchingSquaresTextureNames = preload("uid://dd7fens03aosa")
 
 var material : Dictionary = {
 	"name": "material",

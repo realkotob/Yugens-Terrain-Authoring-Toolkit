@@ -23,6 +23,9 @@ Chunk cell merge modes:
 • POLYHEDRON: Blocky terrain with slight cell smoothing (DEFAULT CHUNK STATE).
 • ROUNDED_POLYHEDRON: A good 50/50 mix between having smooth and blocky terrain.
 • SEMI_ROUND: Mostly smooth terrain with the occasional blocky cells.
-• SPHERICAL: All the terrain will become smooth. This mode looks the most unnatural for the algorithm."
+• SPHERICAL: All the terrain will become smooth. This mode looks the most unnatural for the algorithm.
+
+[SHORTCUTS]
+• CTRL+LMB: Change the currently selected chunk to the hovered chunk."
 attributes = SubResource("Resource_w6p77")
 metadata/_custom_type_script = "uid://brkjbcthwswel"

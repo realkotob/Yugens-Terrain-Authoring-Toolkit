@@ -22,22 +22,22 @@ A bug can also be reported by opening a new issue thread in the issues tab of th
 
 To install the plugin, simply download or clone the latest stable version of this project and copy the plugin from this project's addon folder into your own. Make sure to turn on the plugin in godot by going into the project settings and under "plugins" checking the checkbox next to the plugin's name.
 
-Watch the [YouTube](https://www.youtube.com/watch?v=TV3QyGNMAwo) video to get started with the plugin!!!
+Watch the [YouTube](https://www.youtube.com/playlist?list=PLXcmz5ZRdiyTpf_Jk9gGNb9QQ6Hus8xiP) videos to get started with the plugin!!!
 
 ## Known Issues
 
-1. Brush visuals and cell data doesn't scale with cell_size so very small and very big cell sizes don't work properly (will be fixed in 1.2)
-2. Running physics on a separate thread crashes the plugin (will be fixed in 1.2)
-3. Terrain sizes are very big causing warning messages (will be fixed in 1.2)
+1. Smooth texture blending breaks at certain elevated/lowered cell edge cases
 
 ## Credits
 
 Developed by [Yūgen](https://www.youtube.com/@yugen_seishin) and originally forked from [Jackachulian](https://github.com/jackachulian/jackachulian) on github.
 
-Special Contributors:
+Collaborators (v1.1.0 ONWARDS):
 * [DanTrz](https://github.com/DanTrz)
+* [powertomato](https://github.com/powertomato)
+* [santarl](https://github.com/santarl)
 
-A special thanks to DanTrz (creator of the TileMapLayer3D plugin) for co-authoring big parts of the plugin since the 1.0 release. He has been an amazing contributor to the project and an awesome guy to work with!
+A special thanks to DanTrz (creator of the TileMapLayer3D plugin), powertomato and santarl for co-authoring big parts of the plugin since the 1.0 release. They have been amazing contributors to the project and awesome people to work with!
 
 Contributors:
 * [Dylearn](https://www.youtube.com/@Dylearn)

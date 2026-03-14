@@ -1,6 +1,5 @@
 # This gizmo will have a handle for every single height value.
 # Mostly for debugging.
-# When the overarching terrain system is selected that is where all the brushes will be.
 
 extends EditorNode3DGizmo
 class_name MarchingSquaresTerrainChunkGizmo
@@ -8,20 +7,20 @@ class_name MarchingSquaresTerrainChunkGizmo
 
 func _redraw():
 	clear()
-
-	var terrain: MarchingSquaresTerrainChunk = get_node_3d()
-	var dx = (terrain.dimensions.x - 1) * terrain.cell_size.x
-	var dz = (terrain.dimensions.z - 1) * terrain.cell_size.y
+	
+	var terrain : MarchingSquaresTerrainChunk = get_node_3d()
+	var dx := (terrain.dimensions.x - 1) * terrain.cell_size.x
+	var dz := (terrain.dimensions.z - 1) * terrain.cell_size.y
 	
 	# Only draw the gizmo if this is the only selected node
 	if len(EditorInterface.get_selection().get_selected_nodes()) != 1:
 		return
 	if EditorInterface.get_selection().get_selected_nodes()[0] != terrain:
 		return
-
+	
 	# Handles for raising/lowering terrain (will probably be removed later in favor of brush)
-	var corners = PackedVector3Array()
-	var ids = PackedInt32Array()
+	var corners := PackedVector3Array()
+	var ids := PackedInt32Array()
 	for z in range(terrain.dimensions.z):
 		for x in range(terrain.dimensions.x):
 			var y = terrain.height_map[z][x]
@@ -48,6 +47,7 @@ func _commit_handle(handle_id: int, secondary: bool, restore: Variant, cancel: b
 	
 	if cancel:
 		terrain.height_map[z][x] = restore
+		terrain.mark_dirty()
 	else:
 		var undo_redo := MarchingSquaresTerrainPlugin.instance.get_undo_redo()
 		
@@ -65,6 +65,7 @@ func move_terrain_point(terrain: MarchingSquaresTerrainChunk, handle_id: int, he
 	var z = handle_id / terrain.dimensions.z
 	var x = handle_id % terrain.dimensions.z
 	terrain.height_map[z][x] = height
+	terrain.mark_dirty()
 	
 	notify_needs_update(terrain, z, x)
 	notify_needs_update(terrain, z, x-1)
@@ -76,9 +77,8 @@ func move_terrain_point(terrain: MarchingSquaresTerrainChunk, handle_id: int, he
 
 
 func notify_needs_update(terrain: MarchingSquaresTerrainChunk, z: int, x: int):
-	if z < 0 or z >= terrain.dimensions.z or x < 0 or x > terrain.dimensions.x:
+	if z < 0 or z >= terrain.dimensions.z-1 or x < 0 or x >= terrain.dimensions.x-1:
 		return
-	
 	terrain.needs_update[z][x] = true
 
 
@@ -102,4 +102,5 @@ func _set_handle(handle_id: int, secondary: bool, camera: Camera3D, screen_pos: 
 	if intersection:
 		intersection = terrain.to_local(intersection)
 		terrain.height_map[z][x] = intersection.y
+		terrain.mark_dirty()
 		terrain.update_gizmos()

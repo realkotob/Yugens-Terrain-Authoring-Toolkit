@@ -32,6 +32,6 @@ func _rotate_camera(degrees: float) -> Signal:
 	if _tween and _tween.is_running():
 		_tween.kill()
 	_tween = create_tween()
-	var new_rotation_y = rotation.y + deg_to_rad(degrees)
+	var new_rotation_y := rotation.y + deg_to_rad(degrees)
 	_tween.tween_property(self, "rotation:y", new_rotation_y, 0.5).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
 	return _tween.finished
