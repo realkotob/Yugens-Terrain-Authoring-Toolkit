@@ -236,13 +236,12 @@ func bake_geometry_texture(inst: MeshInstance3D, scene_tree: SceneTree) -> void:
 	
 	cam.add_child(bake_inst)
 	
-	await scene_tree.process_frame
-	await scene_tree.process_frame
-	
-	var img := viewport.get_texture().get_image()
-	
-	finished.emit(new_mesh, inst, img)
-	viewport.queue_free()
+	RenderingServer.frame_post_draw.connect(func():
+		var img := viewport.get_texture().get_image()
+		
+		finished.emit(new_mesh, inst, img)
+		viewport.queue_free()
+	, CONNECT_ONE_SHOT)
 	@warning_ignore_restore("integer_division")
 
 
