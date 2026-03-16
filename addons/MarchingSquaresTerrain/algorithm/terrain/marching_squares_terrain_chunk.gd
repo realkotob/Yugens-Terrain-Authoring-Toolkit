@@ -124,6 +124,26 @@ func initialize_terrain(should_regenerate_mesh: bool = true):
 					for _child in child.get_children():
 						if _child is CollisionShape3D:
 							_child.set_visible(false)
+	
+	if not Engine.is_editor_hint() and terrain_system.enable_runtime_texture_baking:
+		var baker := MarchingSquaresGeometryBaker.new()
+		baker.polygon_texture_resolution = terrain_system.polygon_texture_resolution
+		baker.finished.connect(func(mesh_: Mesh, _original: MeshInstance3D, img: Image):
+			mesh = mesh_
+			var mat : Material
+			if terrain_system.bake_material_override: 
+				mat = terrain_system.bake_material_override.duplicate()
+			else:
+				mat = bake_material.duplicate()
+			
+			if mat is StandardMaterial3D:
+				mat.albedo_texture = ImageTexture.create_from_image(img)
+			elif mat is ShaderMaterial:
+				mat.set_shader_parameter("texture_albedo", ImageTexture.create_from_image(img))
+			mesh.surface_set_material(0, mat)
+		)
+		baker.bake_geometry_texture(self, get_tree())
+	
 	if _temp_grass_multimesh:
 		grass_planter.multimesh = _temp_grass_multimesh
 	else:
@@ -277,25 +297,6 @@ func regenerate_mesh(use_threads: bool = false):
 	
 	var elapsed_time : int = Time.get_ticks_msec() - start_time
 	print_verbose("Generated terrain in "+str(elapsed_time)+"ms")
-	
-	if not Engine.is_editor_hint() and terrain_system.enable_runtime_texture_baking:
-		var baker := MarchingSquaresGeometryBaker.new()
-		baker.polygon_texture_resolution = terrain_system.polygon_texture_resolution
-		baker.finished.connect(func(mesh_: Mesh, _original: MeshInstance3D, img: Image):
-			mesh = mesh_
-			var mat : Material
-			if terrain_system.bake_material_override: 
-				mat = terrain_system.bake_material_override.duplicate()
-			else:
-				mat = bake_material.duplicate()
-			
-			if mat is StandardMaterial3D:
-				mat.albedo_texture = ImageTexture.create_from_image(img)
-			elif mat is ShaderMaterial:
-				mat.set_shader_parameter("texture_albedo", ImageTexture.create_from_image(img))
-			mesh.surface_set_material(0, mat)
-		)
-		baker.bake_geometry_texture(self, get_tree())
 
 
 func generate_terrain_cells(use_threads: bool):
