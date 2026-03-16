@@ -473,6 +473,8 @@ enum StorageMode {
 # Default is 5 (Texture 6 in 1-indexed UI terms)
 @export_storage var default_wall_texture : int = 5
 
+signal load_finished
+
 var void_texture := preload("uid://csvthlqhb8g5j")
 var placeholder_wind_texture := preload("uid://dk1t5hy2tiil7") # Change to your own texture
 var placeholder_rl_noise_texture := preload("uid://85iqlmnoua0e") # Change to your own texture
@@ -544,8 +546,9 @@ func _deferred_enter_tree() -> void:
 		MSTDataHandler.migrate_to_external_storage(self)
 	
 	# Initialize all chunks (regenerate mesh/grass from loaded data)
-	for chunk in chunks.values():
+	for chunk : MarchingSquaresTerrainChunk in chunks.values():
 		chunk.initialize_terrain(true)
+	load_finished.emit()
 
 
 func has_chunk(x: int, z: int) -> bool:
