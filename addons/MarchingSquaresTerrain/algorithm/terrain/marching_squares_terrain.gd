@@ -25,7 +25,21 @@ enum StorageMode {
 				for chunk in chunks.values():
 					chunk.mark_dirty()
 			print_verbose("[MST] Storage mode changed. All chunks marked for save.")
-		
+
+## If true, storage will include grass data, ignored if storage_mode = RUNTIME
+@export var bake_grass : bool = true:
+	set(value):
+		bake_grass = value
+		for chunk : MarchingSquaresTerrainChunk in chunks.values():
+			chunk.mark_dirty()
+
+## If true, storage will include collision data, ignored if storage_mode = RUNTIME
+@export var bake_collision : bool = true:
+	set(value):
+		bake_collision = value
+		for chunk : MarchingSquaresTerrainChunk in chunks.values():
+			chunk.mark_dirty()
+			
 ## The folder where this terrain's data is saved. 
 ## If left empty, it automatically fills with a folder name relative to your scene file.
 ## Note: Manually setting a path locks the save location even if you rename the terrain node later.

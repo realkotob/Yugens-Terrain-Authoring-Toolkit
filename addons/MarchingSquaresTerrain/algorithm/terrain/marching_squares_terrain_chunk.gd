@@ -124,9 +124,11 @@ func initialize_terrain(should_regenerate_mesh: bool = true):
 					for _child in child.get_children():
 						if _child is CollisionShape3D:
 							_child.set_visible(false)
-	
-	grass_planter.setup(self, true)
-	grass_planter.regenerate_all_cells()
+	if _temp_grass_multimesh:
+		grass_planter.multimesh = _temp_grass_multimesh
+	else:
+		grass_planter.setup(self, not terrain_system.bake_grass)
+		grass_planter.regenerate_all_cells()
 
 
 func _notification(what: int) -> void:
