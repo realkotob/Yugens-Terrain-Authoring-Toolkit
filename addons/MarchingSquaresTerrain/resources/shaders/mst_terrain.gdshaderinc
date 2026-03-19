@@ -351,8 +351,8 @@ void fragment() {
 	vec4 vertex_pos = INV_VIEW_MATRIX * vec4(virtual_vertex, 1.0);
 #endif
 
-	vec2 tiling_factor_floor = vec2(1.0 / float(chunk_size.x), 1.0 / float(chunk_size.z));
-	vec2 tiling_factor_wall = vec2(1.0 / float(chunk_size.x), 1.0 / float(chunk_size.y));
+	vec2 tiling_factor_floor = vec2(1.0 / float(chunk_size.x - 1), 1.0 / float(chunk_size.z - 1));
+	vec2 tiling_factor_wall = vec2(1.0 / float(chunk_size.x - 1), 1.0 / float(chunk_size.y - 1));
 	bool is_floor = dot(vertex_normal, vec3(0.0, 1.0, 0.0)) > wall_threshold;
 	
 	// Usd for wall/ridge/ledge calculations
