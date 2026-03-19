@@ -3,6 +3,8 @@ extends Node3D
 class_name MarchingSquaresTerrain
 
 
+signal chunk_dimensions_changed (value : Vector3i)
+
 enum StorageMode {
 	## Saves load time. Loads a pre-built visual mesh from disk.
 	## The collision mesh, grass etc. are generated when the scene loads.
@@ -78,7 +80,7 @@ enum StorageMode {
 		dimensions = value
 		terrain_material.set_shader_parameter("chunk_size", value)
 		if Engine.is_editor_hint():
-			MarchingSquaresTerrainPlugin.instance.brush_size = MarchingSquaresTerrainPlugin.instance.brush_size * ((value.x / 33) + (value.y / 33)) / 2.0
+			emit_signal("chunk_dimensions_changed", value)
 @export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var cell_size : Vector2 = Vector2(2.0, 2.0): # XZ Unit size of each cell
 	set(value):
 		cell_size = value
@@ -569,7 +571,7 @@ func has_chunk(x: int, z: int) -> bool:
 	return chunks.has(Vector2i(x, z))
 
 
-func add_new_chunk(chunk_x: int, chunk_z: int, plugin: MarchingSquaresTerrainPlugin):
+func add_new_chunk(chunk_x: int, chunk_z: int, plugin):
 	var chunk_coords := Vector2i(chunk_x, chunk_z)
 	var new_chunk := MarchingSquaresTerrainChunk.new()
 	new_chunk.name = "Chunk "+str(chunk_coords)
@@ -600,7 +602,7 @@ func add_new_chunk(chunk_x: int, chunk_z: int, plugin: MarchingSquaresTerrainPlu
 	new_chunk.regenerate_mesh()
 
 
-func remove_chunk(x: int, z: int, plugin: MarchingSquaresTerrainPlugin):
+func remove_chunk(x: int, z: int, plugin):
 	var chunk_coords := Vector2i(x, z)
 	var chunk : MarchingSquaresTerrainChunk = chunks[chunk_coords]
 	chunks.erase(chunk_coords)  # Use chunk_coords, not chunk object
@@ -619,7 +621,7 @@ func remove_chunk(x: int, z: int, plugin: MarchingSquaresTerrainPlugin):
 
 
 # Remove a chunk but still keep it in memory (so that undo can restore it)
-func remove_chunk_from_tree(x: int, z: int, plugin: MarchingSquaresTerrainPlugin):
+func remove_chunk_from_tree(x: int, z: int, plugin):
 	var chunk_coords := Vector2i(x, z)
 	var chunk : MarchingSquaresTerrainChunk = chunks[chunk_coords]
 	chunks.erase(chunk_coords)  # Use chunk_coords, not chunk object
@@ -639,7 +641,7 @@ func remove_chunk_from_tree(x: int, z: int, plugin: MarchingSquaresTerrainPlugin
 	plugin.gizmo_plugin.trigger_redraw(self)
 
 
-func add_chunk(coords: Vector2i, chunk: MarchingSquaresTerrainChunk, plugin: MarchingSquaresTerrainPlugin, regenerate_mesh: bool = true):
+func add_chunk(coords: Vector2i, chunk: MarchingSquaresTerrainChunk, plugin, regenerate_mesh: bool = true):
 	chunk.terrain_system = self
 	chunk.chunk_coords = coords
 	chunk._skip_save_on_exit = false  # Reset flag when chunk is re-added (undo restores chunk)

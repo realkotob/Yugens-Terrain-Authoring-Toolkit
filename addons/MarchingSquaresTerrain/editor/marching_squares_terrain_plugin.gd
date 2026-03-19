@@ -250,6 +250,10 @@ func _physics_process(delta: float) -> void:
 	
 	queued_ray_result = space_state.intersect_ray(query)
 
+
+func _on_chunk_dimensions_changed(value: Vector3i):
+	brush_size *= ((value.x / 33) + (value.y / 33)) / 2.0
+
 #region input-handlers
 
 func _edit(object: Object) -> void:
@@ -262,6 +266,8 @@ func _edit(object: Object) -> void:
 		if ui:
 			ui.set_visible(true)
 			current_terrain_node = object
+			if not current_terrain_node.chunk_dimensions_changed.is_connected(_on_chunk_dimensions_changed):
+				current_terrain_node.chunk_dimensions_changed.connect(_on_chunk_dimensions_changed)
 			
 			# Sync plugin's preset from the selected terrain's saved preset
 			# This ensures each terrain keeps its own preset on selection/reload
