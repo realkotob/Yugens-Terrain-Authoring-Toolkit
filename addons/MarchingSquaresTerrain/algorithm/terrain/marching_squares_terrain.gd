@@ -3,6 +3,8 @@ extends Node3D
 class_name MarchingSquaresTerrain
 
 
+signal chunk_dimensions_changed (value : Vector3i)
+
 enum StorageMode {
 	## Saves load time. Loads a pre-built visual mesh from disk.
 	## The collision mesh, grass etc. are generated when the scene loads.
@@ -25,7 +27,21 @@ enum StorageMode {
 				for chunk in chunks.values():
 					chunk.mark_dirty()
 			print_verbose("[MST] Storage mode changed. All chunks marked for save.")
-		
+
+## If true, storage will include grass data, ignored if storage_mode = RUNTIME
+@export var bake_grass : bool = true:
+	set(value):
+		bake_grass = value
+		for chunk : MarchingSquaresTerrainChunk in chunks.values():
+			chunk.mark_dirty()
+
+## If true, storage will include collision data, ignored if storage_mode = RUNTIME
+@export var bake_collision : bool = true:
+	set(value):
+		bake_collision = value
+		for chunk : MarchingSquaresTerrainChunk in chunks.values():
+			chunk.mark_dirty()
+			
 ## The folder where this terrain's data is saved. 
 ## If left empty, it automatically fills with a folder name relative to your scene file.
 ## Note: Manually setting a path locks the save location even if you rename the terrain node later.
@@ -64,7 +80,7 @@ enum StorageMode {
 		dimensions = value
 		terrain_material.set_shader_parameter("chunk_size", value)
 		if Engine.is_editor_hint():
-			MarchingSquaresTerrainPlugin.instance.brush_size = MarchingSquaresTerrainPlugin.instance.brush_size * ((value.x / 33) + (value.y / 33)) / 2.0
+			emit_signal("chunk_dimensions_changed", value)
 @export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var cell_size : Vector2 = Vector2(2.0, 2.0): # XZ Unit size of each cell
 	set(value):
 		cell_size = value
@@ -473,6 +489,8 @@ enum StorageMode {
 # Default is 5 (Texture 6 in 1-indexed UI terms)
 @export_storage var default_wall_texture : int = 5
 
+signal load_finished
+
 var void_texture := preload("uid://csvthlqhb8g5j")
 var placeholder_wind_texture := preload("uid://dk1t5hy2tiil7") # Change to your own texture
 var placeholder_rl_noise_texture := preload("uid://85iqlmnoua0e") # Change to your own texture
@@ -544,15 +562,16 @@ func _deferred_enter_tree() -> void:
 		MSTDataHandler.migrate_to_external_storage(self)
 	
 	# Initialize all chunks (regenerate mesh/grass from loaded data)
-	for chunk in chunks.values():
+	for chunk : MarchingSquaresTerrainChunk in chunks.values():
 		chunk.initialize_terrain(true)
+	load_finished.emit()
 
 
 func has_chunk(x: int, z: int) -> bool:
 	return chunks.has(Vector2i(x, z))
 
 
-func add_new_chunk(chunk_x: int, chunk_z: int, plugin: MarchingSquaresTerrainPlugin):
+func add_new_chunk(chunk_x: int, chunk_z: int, plugin):
 	var chunk_coords := Vector2i(chunk_x, chunk_z)
 	var new_chunk := MarchingSquaresTerrainChunk.new()
 	new_chunk.name = "Chunk "+str(chunk_coords)
@@ -583,7 +602,7 @@ func add_new_chunk(chunk_x: int, chunk_z: int, plugin: MarchingSquaresTerrainPlu
 	new_chunk.regenerate_mesh()
 
 
-func remove_chunk(x: int, z: int, plugin: MarchingSquaresTerrainPlugin):
+func remove_chunk(x: int, z: int, plugin):
 	var chunk_coords := Vector2i(x, z)
 	var chunk : MarchingSquaresTerrainChunk = chunks[chunk_coords]
 	chunks.erase(chunk_coords)  # Use chunk_coords, not chunk object
@@ -602,7 +621,7 @@ func remove_chunk(x: int, z: int, plugin: MarchingSquaresTerrainPlugin):
 
 
 # Remove a chunk but still keep it in memory (so that undo can restore it)
-func remove_chunk_from_tree(x: int, z: int, plugin: MarchingSquaresTerrainPlugin):
+func remove_chunk_from_tree(x: int, z: int, plugin):
 	var chunk_coords := Vector2i(x, z)
 	var chunk : MarchingSquaresTerrainChunk = chunks[chunk_coords]
 	chunks.erase(chunk_coords)  # Use chunk_coords, not chunk object
@@ -622,7 +641,7 @@ func remove_chunk_from_tree(x: int, z: int, plugin: MarchingSquaresTerrainPlugin
 	plugin.gizmo_plugin.trigger_redraw(self)
 
 
-func add_chunk(coords: Vector2i, chunk: MarchingSquaresTerrainChunk, plugin: MarchingSquaresTerrainPlugin, regenerate_mesh: bool = true):
+func add_chunk(coords: Vector2i, chunk: MarchingSquaresTerrainChunk, plugin, regenerate_mesh: bool = true):
 	chunk.terrain_system = self
 	chunk.chunk_coords = coords
 	chunk._skip_save_on_exit = false  # Reset flag when chunk is re-added (undo restores chunk)

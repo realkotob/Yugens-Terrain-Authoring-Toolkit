@@ -285,8 +285,8 @@ func _sample_terrain_texture_color(world_pos: Vector3, texture_id: int, tex_scal
 	if not terrain_image:
 		return Color.WHITE
 	
-	var uv_x : float = clamp(world_pos.x / (terrain_system.dimensions.x * terrain_system.cell_size.x), 0.0, 1.0)
-	var uv_y : float = clamp(world_pos.z / (terrain_system.dimensions.z * terrain_system.cell_size.y), 0.0, 1.0)
+	var uv_x : float = clamp(world_pos.x / ((terrain_system.dimensions.x - 1) * terrain_system.cell_size.x), 0.0, 1.0)
+	var uv_y : float = clamp(world_pos.z / ((terrain_system.dimensions.z - 1) * terrain_system.cell_size.y), 0.0, 1.0)
 	
 	uv_x = abs(fmod(uv_x * tex_scale, 1.0))
 	uv_y = abs(fmod(uv_y * tex_scale, 1.0))

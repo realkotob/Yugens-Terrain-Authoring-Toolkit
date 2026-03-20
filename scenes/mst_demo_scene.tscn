@@ -3,8 +3,8 @@
 [ext_resource type="Script" uid="uid://bhr82jo0k7guh" path="res://scripts/rotating_camera.gd" id="1_0xhur"]
 [ext_resource type="Script" uid="uid://6pvgykbbdsmg" path="res://scripts/demo_scene.gd" id="1_rcx4y"]
 [ext_resource type="Script" uid="uid://cddg1xr5hye1d" path="res://addons/MarchingSquaresTerrain/algorithm/terrain/marching_squares_terrain.gd" id="3_0450b"]
-[ext_resource type="Script" uid="uid://cql4d8s5t5xcx" path="res://addons/MarchingSquaresTerrain/algorithm/terrain/marching_squares_terrain_chunk.gd" id="4_0xhur"]
-[ext_resource type="Script" uid="uid://22l7ysgniux3" path="res://addons/MarchingSquaresTerrain/algorithm/grass/marching_squares_grass_planter.gd" id="5_rcx4y"]
+[ext_resource type="Script" uid="uid://cql4d8s5t5xcx" path="res://addons/MarchingSquaresTerrain/algorithm/terrain/marching_squares_terrain_chunk.gd" id="4_0450b"]
+[ext_resource type="Script" uid="uid://22l7ysgniux3" path="res://addons/MarchingSquaresTerrain/algorithm/grass/marching_squares_grass_planter.gd" id="5_0xhur"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_e28qv"]
 sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
@@ -67,10 +67,10 @@ texture_scale_12 = 0.9
 texture_scale_13 = 0.7
 metadata/_custom_type_script = "uid://cddg1xr5hye1d"
 
-[node name="Chunk (0, 0)" type="MeshInstance3D" parent="SubViewportContainer/SubViewport/MarchingSquaresTerrain" unique_id=182060169 node_paths=PackedStringArray("terrain_system")]
-script = ExtResource("4_0xhur")
+[node name="Chunk (0, 0)" type="MeshInstance3D" parent="SubViewportContainer/SubViewport/MarchingSquaresTerrain" unique_id=1352593077 node_paths=PackedStringArray("terrain_system")]
+script = ExtResource("4_0450b")
 terrain_system = NodePath("..")
 
-[node name="GrassPlanter" type="MultiMeshInstance3D" parent="SubViewportContainer/SubViewport/MarchingSquaresTerrain/Chunk (0, 0)" unique_id=1451809984]
+[node name="GrassPlanter" type="MultiMeshInstance3D" parent="SubViewportContainer/SubViewport/MarchingSquaresTerrain/Chunk (0, 0)" unique_id=900347719]
 cast_shadow = 0
-script = ExtResource("5_rcx4y")
+script = ExtResource("5_0xhur")

@@ -6,12 +6,6 @@ extends RefCounted
 
 const ChunkData = preload("res://addons/MarchingSquaresTerrain/resources/mst_chunk_data.gd")
 
-# Configuration for BAKED mode
-# If true, these components will be saved to disk. If false, they are generated at runtime.
-const BAKE_COLLISION : bool = false
-const BAKE_GRASS : bool = false
-
-
 ## Generate a unique terrain ID (called once on first save).
 static func generate_terrain_uid() -> String:
 	return "%08x" % (randi() ^ int(Time.get_unix_time_from_system()))
@@ -145,10 +139,10 @@ static func save_chunk_resources(terrain: MarchingSquaresTerrain, chunk: Marchin
 	if not is_baked_mode:
 		data.mesh = null
 	
-	if not is_baked_mode or not BAKE_GRASS:
+	if not is_baked_mode or not terrain.bake_grass:
 		data.grass_multimesh = null
 	
-	if not is_baked_mode or not BAKE_COLLISION:
+	if not is_baked_mode or not terrain.bake_collision:
 		data.collision_faces = PackedVector3Array()
 	
 	var metadata_path := chunk_dir.path_join("metadata.res")
@@ -244,10 +238,10 @@ static func export_chunk_data(chunk: MarchingSquaresTerrainChunk) -> MSTChunkDat
 	# Ephemeral data for BAKED mode
 	data.mesh = chunk.mesh
 	
-	if BAKE_GRASS and chunk.grass_planter:
+	if chunk.terrain_system.bake_grass and chunk.grass_planter:
 		data.grass_multimesh = chunk.grass_planter.multimesh
 	
-	if BAKE_COLLISION:
+	if chunk.terrain_system.bake_collision:
 		# Find collision shape
 		for child in chunk.get_children():
 			if child is StaticBody3D:
@@ -283,6 +277,12 @@ static func import_chunk_data(chunk: MarchingSquaresTerrainChunk, data: MSTChunk
 	# Restore baked assets if present
 	if data.mesh:
 		chunk.mesh = data.mesh
+	
+	if chunk.terrain_system.bake_grass and not data.grass_multimesh:
+		push_warning("Grass baking enabled, but terrain-ressource does not contain grass data")
+	
+	if chunk.terrain_system.bake_collision and data.collision_faces.is_empty():
+		push_warning("Collision baking enabled, but terrain-ressource does not contain collision data")
 	
 	if data.grass_multimesh:
 		chunk._temp_grass_multimesh = data.grass_multimesh
