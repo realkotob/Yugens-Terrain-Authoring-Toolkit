@@ -1,0 +1,23 @@
+[gd_scene format=3 uid="uid://vyc6ymym8x0y"]
+
+[ext_resource type="Script" uid="uid://cddg1xr5hye1d" path="res://addons/MarchingSquaresTerrain/algorithm/terrain/marching_squares_terrain.gd" id="1_hqsu0"]
+[ext_resource type="Script" uid="uid://cql4d8s5t5xcx" path="res://addons/MarchingSquaresTerrain/algorithm/terrain/marching_squares_terrain_chunk.gd" id="2_3al0s"]
+[ext_resource type="Script" uid="uid://22l7ysgniux3" path="res://addons/MarchingSquaresTerrain/algorithm/grass/marching_squares_grass_planter.gd" id="3_1hgjw"]
+
+[node name="MarchingSquaresTerrain" type="Node3D" unique_id=1444500002]
+script = ExtResource("1_hqsu0")
+storage_mode = 1
+data_directory = "res://tests/terrain_data/geometry_collision"
+_storage_initialized = true
+dimensions = Vector3i(5, 6, 7)
+cell_size = Vector2(1, 1)
+metadata/_custom_type_script = "uid://cddg1xr5hye1d"
+
+[node name="Chunk (0, 0)" type="MeshInstance3D" parent="." unique_id=1727612314 node_paths=PackedStringArray("terrain_system")]
+script = ExtResource("2_3al0s")
+terrain_system = NodePath("..")
+metadata/_custom_type_script = "uid://cql4d8s5t5xcx"
+
+[node name="GrassPlanter" type="MultiMeshInstance3D" parent="Chunk (0, 0)" unique_id=1953901512]
+cast_shadow = 0
+script = ExtResource("3_1hgjw")
