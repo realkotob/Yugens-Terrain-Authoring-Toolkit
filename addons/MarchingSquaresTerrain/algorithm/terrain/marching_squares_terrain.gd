@@ -657,24 +657,15 @@ func add_chunk(coords: Vector2i, chunk: MarchingSquaresTerrainChunk, plugin, reg
 		coords.y * ((dimensions.z - 1) * cell_size.y)
 	)
 	
-	if EngineWrapper.instance.is_editor():
-		var editor_interface = Engine.get_singleton('EditorInterface')
-		_set_owner_recursive(chunk, editor_interface.get_edited_scene_root())
-	else:
-		_set_owner_recursive(chunk, get_tree().root)
+	EngineWrapper.instance.set_owner_recursive(chunk)
 	chunk.initialize_terrain(regenerate_mesh)
 	print_verbose("[MST] Added new chunk to terrain system at ", chunk)
-	
-	if plugin.selected_chunk and plugin.selected_chunk.chunk_coords == Vector2i(99999, 99999):
-		plugin.selected_chunk = chunk
-	plugin.ui.tool_attributes.show_tool_attributes(plugin.TerrainToolMode.CHUNK_MANAGEMENT)
-	plugin.gizmo_plugin.trigger_redraw(self)
+	if plugin:
+		if plugin.selected_chunk and plugin.selected_chunk.chunk_coords == Vector2i(99999, 99999):
+			plugin.selected_chunk = chunk
+		plugin.ui.tool_attributes.show_tool_attributes(plugin.TerrainToolMode.CHUNK_MANAGEMENT)
+		plugin.gizmo_plugin.trigger_redraw(self)
 
-
-func _set_owner_recursive(node: Node, _owner: Node) -> void:
-	node.owner = _owner
-	for c in node.get_children():
-		_set_owner_recursive(c, _owner)
 
 #region texture (set) functions
 

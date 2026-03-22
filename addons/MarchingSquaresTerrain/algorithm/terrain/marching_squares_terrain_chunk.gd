@@ -267,10 +267,7 @@ func regenerate_mesh(use_threads: bool = false):
 		add_child(grass_planter)
 		grass_planter._chunk = self
 		grass_planter.setup(self)
-		if EngineWrapper.instance.is_editor():
-			grass_planter.owner = Engine.get_singleton("EditorInterface").get_edited_scene_root()
-		elif is_inside_tree():
-			grass_planter.owner = get_tree().root
+		EngineWrapper.instance.set_owner_recursive(grass_planter)
 	else:
 		grass_planter._chunk = self
 	
@@ -606,7 +603,7 @@ func _recreate_collision_body() -> void:
 	
 	# Set owner for editor visibility at first, but we clear it later
 	if EngineWrapper.instance.is_editor():
-		var scene_root = Engine.get_singleton("EditorInterface").get_edited_scene_root()
+		var scene_root = EngineWrapper.instance.get_root_for_node(self)
 		if scene_root:
 			body.owner = scene_root
 			col_shape.owner = scene_root
