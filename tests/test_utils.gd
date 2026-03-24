@@ -1,6 +1,7 @@
 extends Object
 class_name MSTTestUtils
 
+
 static func assert_multi_mesh_y_values(ts: GdUnitTestSuite, mm: MultiMesh, value: float) -> void:
 	var ctx := get_last_calls_as_string()
 	ts.assert_that(mm).append_failure_message(ctx).is_not_null()
@@ -16,7 +17,7 @@ static func assert_multi_mesh_y_values(ts: GdUnitTestSuite, mm: MultiMesh, value
 		if not eq:
 			return
 
-			
+
 static func assert_array_equal(ts: GdUnitTestSuite, a: PackedFloat32Array, b: PackedFloat32Array) -> void:
 	var ctx := get_last_calls_as_string()
 	ts.assert_int(a.size()).append_failure_message(ctx).is_equal(b.size())
@@ -49,31 +50,32 @@ static func collect_components(ts: GdUnitTestSuite, terrain: MarchingSquaresTerr
 		"collision": col,
 		"col_shape": col_shape
 	}
-	
+
+
 static func get_last_calls(skip: int = 1) -> Array:
 	var stack := get_stack()
 	var result: Array = []
-
+	
 	# skip = how many top frames to ignore (this function, helpers, etc.)
 	var start := skip
-
+	
 	for i in range(start, stack.size()):
 		if stack[i].source.begins_with("res://addons/gdUnit4/src"):
 			break
 		result.append(stack[i])
-
+	
 	return result
+
 
 static func get_last_calls_as_string(skip: int = 2) -> String:
 	var calls := get_last_calls(skip + 1) # +1 to skip this wrapper too
 	var parts: Array[String] = []
-
+	
 	for c in calls:
 		parts.append("%s:%d (%s)" % [
 			c.source,
 			c.line,
 			c.function
 		])
-
-	return " <- ".join(parts)
 	
+	return " <- ".join(parts)

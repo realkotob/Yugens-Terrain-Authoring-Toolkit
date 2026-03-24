@@ -1,4 +1,4 @@
-# GdUnit generated TestSuite
+## GdUnit generated TestSuite
 class_name MarchingSquaresTerrainTest
 extends GdUnitTestSuite
 @warning_ignore('unused_parameter')
@@ -14,7 +14,7 @@ func test_saving() -> void:
 	
 	assert_str(terrain.data_directory).is_not_empty()
 	
-	## Make changes that are not saved
+	# Make changes that are not saved
 	terrain.add_new_chunk(0,0,null)
 	var comp := MSTTestUtils.collect_components(self, terrain)
 	var chunk := comp.chunk as MarchingSquaresTerrainChunk
@@ -30,11 +30,11 @@ func test_saving() -> void:
 	## Nothing is changed and reloaded after tab-switch
 	_check_geometry_grass_and_coliders(comp)
 	
-	## Emit a save notification, to store geometry
+	# Emit a save notification, to store geometry
 	terrain._notification(NOTIFICATION_EDITOR_PRE_SAVE)
 	
 	terrain.free()
-	
+
 
 func test_load1() -> void:
 	_test_load_init("res://tests/terrain_data/all/", MarchingSquaresTerrain.StorageMode.BAKED, true, true, false, false, false)
@@ -51,7 +51,6 @@ func test_load4() -> void:
 
 func test_load5() -> void:
 	_test_load_init("res://tests/terrain_data/none/", MarchingSquaresTerrain.StorageMode.BAKED, true, true, true, true, true)
-
 
 func test_load6() -> void:
 	_test_load_init("res://tests/terrain_data/all/", MarchingSquaresTerrain.StorageMode.RUNTIME, true, true, false, false, false)
@@ -153,8 +152,8 @@ func _test_load(
 		asrt.is_push_warning("Collision baking enabled, but terrain-ressource does not contain collision data")
 	if not assert_geometry_warning and not assert_grass_warning and not assert_col_warning:
 		lambda.call()
-		
-	# ensure baked data has been loaded/regenerated
+	
+	# Ensure baked data has been loaded/regenerated
 	var comp := MSTTestUtils.collect_components(self, terrain)
 	_check_geometry_grass_and_coliders(comp)
 	
@@ -173,17 +172,17 @@ func _test_load(
 	_check_geometry_grass_and_coliders(comp, -7.0)
 	
 	terrain.free()
-	
+
 
 func test_baked_grass_dissapearing() -> void:
 	var root := _mk_mock_editor("res://tests/tmp/mock.tscn")
 	var terrain := _mk_terrain_node()
 	
-	# if the terrain has no reference no data will be loaded
-	# usually these are saved in the scene file
+	# If the terrain has no reference no data will be loaded
+	# Usually these are saved in the scene file
 	terrain.add_new_chunk(0,0, null)
 	terrain.chunks[Vector2i(0,0)]._data_dirty = false
-
+	
 	terrain.data_directory = "res://tests/terrain_data/all/"
 	terrain._storage_initialized = true
 	
@@ -194,17 +193,16 @@ func test_baked_grass_dissapearing() -> void:
 	var mm := comp.grass.multimesh as MultiMesh
 	var buffer_pre_bake_reload := PackedFloat32Array(mm.buffer)
 	
-	# ensure baked data has been loaded
+	# Ensure baked data has been loaded
 	_check_geometry_grass_and_coliders(comp)
 	
 	await _simulate_tab_switch(root, terrain)
 	
-	var comp_after_after_bake_reload = MSTTestUtils.collect_components(self, terrain)
+	var comp_after_after_bake_reload := MSTTestUtils.collect_components(self, terrain)
 	_check_geometry_grass_and_coliders(comp_after_after_bake_reload)
 	
 	mm = comp_after_after_bake_reload.grass.multimesh
 	MSTTestUtils.assert_array_equal(self, buffer_pre_bake_reload, mm.buffer)
-	
 
 #region helpers
 
@@ -212,7 +210,7 @@ func _mk_mock_editor(scene_path) -> Node:
 	var root := get_tree().root
 	root.scene_file_path = scene_path
 	
-	var engine_mock = mock(EngineWrapper)
+	var engine_mock : EngineWrapper = mock(EngineWrapper)
 	do_return(true).on(engine_mock).is_editor()
 	do_return(root).on(engine_mock).get_edited_scene_root()
 	do_return(root).on(engine_mock).get_root_for_node(any())
@@ -231,8 +229,8 @@ func _mk_terrain_node(storage_mode: MarchingSquaresTerrain.StorageMode = Marchin
 	terrain.dimensions = Vector3i(5,6,7)
 	terrain.cell_size = Vector2.ONE
 	return terrain
-	
-	
+
+
 func _check_geometry_grass_and_coliders(comp: Dictionary, y_values: float = 7.0) -> void:
 	var ctx := MSTTestUtils.get_last_calls_as_string()
 	var mm := comp.grass.multimesh as MultiMesh
@@ -247,7 +245,7 @@ func _check_geometry_grass_and_coliders(comp: Dictionary, y_values: float = 7.0)
 		assert_bool(eq).append_failure_message(ctx).is_true()
 		if not eq:
 			break
-			
+	
 	var col_shape := comp.col_shape.shape as ConcavePolygonShape3D
 	assert_that(col_shape).is_not_null()
 	var col_faces := col_shape.get_faces()
@@ -256,13 +254,12 @@ func _check_geometry_grass_and_coliders(comp: Dictionary, y_values: float = 7.0)
 		assert_bool(eq).append_failure_message(ctx).is_true()
 		if not eq:
 			break
-	
-	
+
+
 func _simulate_tab_switch(root: Node, terrain: Node) -> void:
-	## simulate tab-switch scenes in editor [data unsaved]
+	# Simulate tab-switch scenes in editor [data unsaved]
 	root.remove_child(terrain)
 	root.add_child(terrain)
 	await get_tree().process_frame
-	
 
 #endregion
