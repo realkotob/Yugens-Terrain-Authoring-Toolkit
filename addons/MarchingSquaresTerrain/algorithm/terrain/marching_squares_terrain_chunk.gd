@@ -92,10 +92,29 @@ func initialize_terrain(should_regenerate_mesh: bool = true):
 		for x in range(dimensions.x - 1):
 			needs_update[z].append(true)
 	
-	if not grass_planter:
+	if not get_node_or_null("GrassPlanter"):
 		grass_planter = get_node_or_null("GrassPlanter")
-		if grass_planter:
-			grass_planter._chunk = self
+		if not grass_planter:
+			grass_planter = MarchingSquaresGrassPlanter.new()
+			if not color_map_0 or not color_map_1:
+				generate_color_maps()
+			if not grass_mask_map:
+				generate_grass_mask_map()
+			add_child(grass_planter)
+		grass_planter.name = "GrassPlanter"
+		grass_planter._chunk = self
+		grass_planter.setup(self)
+		EngineWrapper.instance.set_owner_recursive(grass_planter)
+	else:
+		if not grass_planter:
+			grass_planter = get_node_or_null("GrassPlanter")
+		grass_planter.terrain_system = terrain_system
+		grass_planter._chunk = self
+		
+	if _temp_grass_multimesh:
+		grass_planter.multimesh = _temp_grass_multimesh
+	if not grass_planter.multimesh:
+		grass_planter.setup(self)
 	
 	# Generate maps if not loaded from external storage (works for both editor and runtime)
 	if not height_map:
@@ -143,9 +162,6 @@ func initialize_terrain(should_regenerate_mesh: bool = true):
 			mesh.surface_set_material(0, mat)
 		, CONNECT_ONE_SHOT)
 		baker.bake_geometry_texture(self, get_tree())
-	
-	if _temp_grass_multimesh:
-		grass_planter.multimesh = _temp_grass_multimesh
 
 
 func _notification(what: int) -> void:
@@ -250,22 +266,6 @@ func regenerate_mesh(use_threads: bool = false):
 	st.set_custom_format(2, SurfaceTool.CUSTOM_RGBA_FLOAT)
 	
 	var start_time : int = Time.get_ticks_msec()
-	
-	if not get_node_or_null("GrassPlanter"):
-		grass_planter = get_node_or_null("GrassPlanter")
-		if not grass_planter:
-			grass_planter = MarchingSquaresGrassPlanter.new()
-			if not color_map_0 or not color_map_1:
-				generate_color_maps()
-			if not grass_mask_map:
-				generate_grass_mask_map()
-		grass_planter.name = "GrassPlanter"
-		add_child(grass_planter)
-		grass_planter._chunk = self
-		grass_planter.setup(self)
-		EngineWrapper.instance.set_owner_recursive(grass_planter)
-	else:
-		grass_planter._chunk = self
 	
 	generate_terrain_cells(use_threads)
 	
