@@ -480,7 +480,7 @@ func handle_mouse(camera: Camera3D, event: InputEvent) -> int:
 				var removed_chunk = terrain.chunks[chunk_coords]
 				get_undo_redo().create_action("remove chunk")
 				get_undo_redo().add_do_method(terrain, "remove_chunk_from_tree", chunk_x, chunk_z, self)
-				get_undo_redo().add_undo_method(terrain, "add_chunk", chunk_coords, self, removed_chunk)
+				get_undo_redo().add_undo_method(terrain, "add_chunk", chunk_coords, removed_chunk, self)
 				get_undo_redo().commit_action()
 				return EditorPlugin.AFTER_GUI_INPUT_STOP
 			

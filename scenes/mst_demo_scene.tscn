@@ -56,21 +56,16 @@ size = 55.0
 near = 0.003
 far = 1200.0
 
-[node name="MarchingSquaresTerrain" type="Node3D" parent="SubViewportContainer/SubViewport" unique_id=1979600537]
+[node name="MarchingSquaresTerrain" type="Node3D" parent="SubViewportContainer/SubViewport" unique_id=877687974]
 script = ExtResource("3_0450b")
-data_directory = "res://scenes/mst_demo_scene_TerrainData/MarchingSquaresTerrain_63056bd6/"
+data_directory = "res://scenes/mst_demo_scene_TerrainData/MarchingSquaresTerrain_5ae7ecc5"
 _storage_initialized = true
-texture_scale_3 = 0.9
-texture_scale_7 = 0.9
-texture_scale_9 = 1.1
-texture_scale_12 = 0.9
-texture_scale_13 = 0.7
 metadata/_custom_type_script = "uid://cddg1xr5hye1d"
 
-[node name="Chunk (0, 0)" type="MeshInstance3D" parent="SubViewportContainer/SubViewport/MarchingSquaresTerrain" unique_id=1352593077 node_paths=PackedStringArray("terrain_system")]
+[node name="Chunk (0, 0)" type="MeshInstance3D" parent="SubViewportContainer/SubViewport/MarchingSquaresTerrain" unique_id=38471484 node_paths=PackedStringArray("terrain_system")]
 script = ExtResource("4_0450b")
 terrain_system = NodePath("..")
 
-[node name="GrassPlanter" type="MultiMeshInstance3D" parent="SubViewportContainer/SubViewport/MarchingSquaresTerrain/Chunk (0, 0)" unique_id=900347719]
+[node name="GrassPlanter" type="MultiMeshInstance3D" parent="SubViewportContainer/SubViewport/MarchingSquaresTerrain/Chunk (0, 0)" unique_id=199701021]
 cast_shadow = 0
 script = ExtResource("5_0xhur")
