@@ -41,7 +41,7 @@ var grass_mask_map : PackedColorArray # Stores if a cell should have grass or no
 
 var merge_threshold : float = MERGE_MODE[Mode.POLYHEDRON]
 
-var grass_planter : MarchingSquaresGrassPlanter = load("uid://b0dc71ti1ofmh").instantiate()
+var grass_planter : MarchingSquaresGrassPlanter
 
 var global_position_cached : Vector3 = Vector3.ZERO
 
@@ -92,10 +92,29 @@ func initialize_terrain(should_regenerate_mesh: bool = true):
 		for x in range(dimensions.x - 1):
 			needs_update[z].append(true)
 	
-	if not grass_planter:
+	if not get_node_or_null("GrassPlanter"):
 		grass_planter = get_node_or_null("GrassPlanter")
-		if grass_planter:
-			grass_planter._chunk = self
+		if not grass_planter:
+			grass_planter = MarchingSquaresGrassPlanter.new()
+			if not color_map_0 or not color_map_1:
+				generate_color_maps()
+			if not grass_mask_map:
+				generate_grass_mask_map()
+			add_child(grass_planter)
+		grass_planter.name = "GrassPlanter"
+		grass_planter._chunk = self
+		grass_planter.setup(self)
+		EngineWrapper.instance.set_owner_recursive(grass_planter)
+	else:
+		if not grass_planter:
+			grass_planter = get_node_or_null("GrassPlanter")
+		grass_planter.terrain_system = terrain_system
+		grass_planter._chunk = self
+		
+	if _temp_grass_multimesh:
+		grass_planter.multimesh = _temp_grass_multimesh
+	if not grass_planter.multimesh:
+		grass_planter.setup(self)
 	
 	# Generate maps if not loaded from external storage (works for both editor and runtime)
 	if not height_map:
@@ -125,7 +144,7 @@ func initialize_terrain(should_regenerate_mesh: bool = true):
 						if _child is CollisionShape3D:
 							_child.set_visible(false)
 	
-	if not Engine.is_editor_hint() and terrain_system.enable_runtime_texture_baking:
+	if not EngineWrapper.instance.is_editor() and terrain_system.enable_runtime_texture_baking:
 		var baker := MarchingSquaresGeometryBaker.new()
 		baker.polygon_texture_resolution = terrain_system.polygon_texture_resolution
 		baker.finished.connect(func(mesh_: Mesh, _original: MeshInstance3D, img: Image):
@@ -141,19 +160,12 @@ func initialize_terrain(should_regenerate_mesh: bool = true):
 			elif mat is ShaderMaterial:
 				mat.set_shader_parameter("texture_albedo", ImageTexture.create_from_image(img))
 			mesh.surface_set_material(0, mat)
-		)
+		, CONNECT_ONE_SHOT)
 		baker.bake_geometry_texture(self, get_tree())
-	
-	if _temp_grass_multimesh:
-		grass_planter.setup(self, false)
-		grass_planter.multimesh = _temp_grass_multimesh
-	else:
-		grass_planter.setup(self, not terrain_system.bake_grass)
-		grass_planter.regenerate_all_cells()
 
 
 func _notification(what: int) -> void:
-	if not Engine.is_editor_hint():
+	if not EngineWrapper.instance.is_editor():
 		return
 	
 	match what:
@@ -231,7 +243,7 @@ func _exit_tree() -> void:
 	_temp_collision_shapes.clear()
 	
 	# Clear owner on ALL collision nodes to prevent serialization edge cases
-	if Engine.is_editor_hint():
+	if EngineWrapper.instance.is_editor():
 		for child in get_children():
 			if child is StaticBody3D:
 				child.owner = null
@@ -254,25 +266,6 @@ func regenerate_mesh(use_threads: bool = false):
 	st.set_custom_format(2, SurfaceTool.CUSTOM_RGBA_FLOAT)
 	
 	var start_time : int = Time.get_ticks_msec()
-	
-	if not get_node_or_null("GrassPlanter"):
-		grass_planter = get_node_or_null("GrassPlanter")
-		if not grass_planter:
-			grass_planter = MarchingSquaresGrassPlanter.new()
-			if not color_map_0 or not color_map_1:
-				generate_color_maps()
-			if not grass_mask_map:
-				generate_grass_mask_map()
-		grass_planter.name = "GrassPlanter"
-		add_child(grass_planter)
-		grass_planter._chunk = self
-		grass_planter.setup(self)
-		if Engine.is_editor_hint():
-			grass_planter.owner = Engine.get_singleton("EditorInterface").get_edited_scene_root()
-		elif is_inside_tree():
-			grass_planter.owner = get_tree().root
-	else:
-		grass_planter._chunk = self
 	
 	generate_terrain_cells(use_threads)
 	
@@ -586,6 +579,10 @@ func _recreate_collision_body() -> void:
 	if not is_inside_tree() or _temp_collision_shapes.is_empty():
 		_temp_collision_shapes.clear()
 		return
+		
+	for child in get_children():
+		if child is StaticBody3D:
+			child.free()
 	
 	# Only create ONE body with the FIRST shape
 	var shape : ConcavePolygonShape3D = _temp_collision_shapes[0]
@@ -605,8 +602,8 @@ func _recreate_collision_body() -> void:
 	add_child(body)
 	
 	# Set owner for editor visibility at first, but we clear it later
-	if Engine.is_editor_hint():
-		var scene_root = Engine.get_singleton("EditorInterface").get_edited_scene_root()
+	if EngineWrapper.instance.is_editor():
+		var scene_root = EngineWrapper.instance.get_root_for_node(self)
 		if scene_root:
 			body.owner = scene_root
 			col_shape.owner = scene_root
@@ -650,8 +647,5 @@ func regenerate_all_cells(use_threads: bool):
 		dialog.connect("file_selected", file_selected)
 		dialog.popup_centered()
 	
-	baker.finished.connect(f)
+	baker.finished.connect(f, CONNECT_ONE_SHOT)
 	baker.bake_geometry_texture(self, tree)
-	
-	await baker.finished
-	baker.finished.disconnect(f)

@@ -32,8 +32,8 @@ static func generate_data_directory(terrain: MarchingSquaresTerrain) -> String:
 	var tree := terrain.get_tree()
 	if not tree:
 		return ""  # Node not in scene tree yet
-	
-	var scene_root := tree.edited_scene_root if Engine.is_editor_hint() else tree.current_scene
+	var inst := EngineWrapper.instance
+	var scene_root := inst.get_root_for_node(terrain)
 	if not scene_root or scene_root.scene_file_path.is_empty():
 		return ""
 	
@@ -46,9 +46,9 @@ static func generate_data_directory(terrain: MarchingSquaresTerrain) -> String:
 
 ## Check if a terrains data directory is unique
 static func is_data_directory_unique(terrain: MarchingSquaresTerrain) -> bool:
-	if not (Engine.is_editor_hint() and terrain.is_inside_tree()):
+	if not (EngineWrapper.instance.is_editor() and terrain.is_inside_tree()):
 		return true
-	var scene_root := terrain.get_tree().edited_scene_root
+	var scene_root := EngineWrapper.instance.get_root_for_node(terrain)
 	var dirs := _collect_terrain_dirs_recursive(scene_root)
 
 	var simplified_path := terrain.data_directory.simplify_path()
@@ -277,7 +277,9 @@ static func import_chunk_data(chunk: MarchingSquaresTerrainChunk, data: MSTChunk
 	# Restore baked assets if present
 	if data.mesh:
 		chunk.mesh = data.mesh
-	
+	elif chunk.terrain_system.storage_mode == MarchingSquaresTerrain.StorageMode.BAKED:
+		push_warning("Baking enabled, but terrain-ressource does not contain mesh data")
+		
 	if chunk.terrain_system.bake_grass and not data.grass_multimesh:
 		push_warning("Grass baking enabled, but terrain-ressource does not contain grass data")
 	
@@ -477,7 +479,7 @@ static func cleanup_orphaned_terrain_directories(terrain: MarchingSquaresTerrain
 	if not tree:
 		return
 	
-	var scene_root := tree.edited_scene_root if Engine.is_editor_hint() else tree.current_scene
+	var scene_root := EngineWrapper.instance.get_root_for_node(terrain)
 	if not scene_root or scene_root.scene_file_path.is_empty():
 		return
 	
