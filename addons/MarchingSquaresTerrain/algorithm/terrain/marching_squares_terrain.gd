@@ -556,12 +556,6 @@ func _deferred_enter_tree() -> void:
 			if chunk._data_dirty:
 				return
 	chunks.clear()
-	
-	# Apply all persisted textures/colors to this terrain's unique shader materials
-	# This is needed because _init() creates fresh duplicated materials that don't have
-	# the terrain's saved texture values - only the base resource defaults
-	force_batch_update()
-	
 	for chunk in get_children():
 		if chunk is MarchingSquaresTerrainChunk:
 			chunks[chunk.chunk_coords] = chunk
@@ -578,6 +572,12 @@ func _deferred_enter_tree() -> void:
 	# Initialize all chunks (regenerate mesh/grass from loaded data)
 	for chunk : MarchingSquaresTerrainChunk in chunks.values():
 		chunk.initialize_terrain(true)
+		
+	# Apply all persisted textures/colors to this terrain's unique shader materials
+	# This is needed because _init() creates fresh duplicated materials that don't have
+	# the terrain's saved texture values - only the base resource defaults
+	force_batch_update()
+	
 	load_finished.emit()
 
 
@@ -813,9 +813,6 @@ func force_batch_update() -> void:
 	grass_mat.set_shader_parameter("use_grass_tex_4", tex4_has_grass)
 	grass_mat.set_shader_parameter("use_grass_tex_5", tex5_has_grass)
 	grass_mat.set_shader_parameter("use_grass_tex_6", tex6_has_grass)
-	
-	for chunk: MarchingSquaresTerrainChunk in chunks.values():
-		chunk.grass_planter.regenerate_all_cells()
 
 
 ## Syncs and saves current UI texture values to the given preset resource

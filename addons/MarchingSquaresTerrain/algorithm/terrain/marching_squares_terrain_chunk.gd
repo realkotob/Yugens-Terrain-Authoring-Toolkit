@@ -115,6 +115,8 @@ func initialize_terrain(should_regenerate_mesh: bool = true):
 		grass_planter.multimesh = _temp_grass_multimesh
 	if not grass_planter.multimesh:
 		grass_planter.setup(self)
+		grass_planter.regenerate_all_cells()
+	grass_planter.multimesh.mesh = terrain_system.grass_mesh
 	
 	# Generate maps if not loaded from external storage (works for both editor and runtime)
 	if not height_map:
