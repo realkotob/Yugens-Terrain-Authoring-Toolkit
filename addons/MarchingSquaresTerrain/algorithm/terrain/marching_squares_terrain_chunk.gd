@@ -110,7 +110,7 @@ func initialize_terrain(should_regenerate_mesh: bool = true):
 			grass_planter = get_node_or_null("GrassPlanter")
 		grass_planter.terrain_system = terrain_system
 		grass_planter._chunk = self
-		
+	
 	if _temp_grass_multimesh:
 		grass_planter.multimesh = _temp_grass_multimesh
 	if not grass_planter.multimesh:
@@ -229,12 +229,14 @@ func _notification(what: int) -> void:
 					for shape_child in child.get_children():
 						if shape_child is CollisionShape3D:
 							shape_child.owner = null
-							
+
+
 func _enter_tree() -> void:
 	if get_parent() != terrain_system:
 		push_error("Chunk must remain within its parent!")
 	terrain_system.chunks[chunk_coords] = self
-			
+
+
 func _exit_tree() -> void:
 	# Clear temp references
 	_temp_height_map = []

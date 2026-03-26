@@ -278,13 +278,13 @@ static func import_chunk_data(chunk: MarchingSquaresTerrainChunk, data: MSTChunk
 	if data.mesh:
 		chunk.mesh = data.mesh
 	elif chunk.terrain_system.storage_mode == MarchingSquaresTerrain.StorageMode.BAKED:
-		push_warning("Baking enabled, but terrain-ressource does not contain mesh data")
+		push_warning("Baking enabled, but terrain-resource does not contain mesh data")
 		
 	if chunk.terrain_system.bake_grass and not data.grass_multimesh:
-		push_warning("Grass baking enabled, but terrain-ressource does not contain grass data")
+		push_warning("Grass baking enabled, but terrain-resource does not contain grass data")
 	
 	if chunk.terrain_system.bake_collision and data.collision_faces.is_empty():
-		push_warning("Collision baking enabled, but terrain-ressource does not contain collision data")
+		push_warning("Collision baking enabled, but terrain-resource does not contain collision data")
 	
 	if data.grass_multimesh:
 		chunk._temp_grass_multimesh = data.grass_multimesh

@@ -27,6 +27,7 @@ enum StorageMode {
 				for chunk in chunks.values():
 					chunk.mark_dirty()
 			print_verbose("[MST] Storage mode changed. All chunks marked for save.")
+		notify_property_list_changed()
 
 ## If true, storage will include grass data, ignored if storage_mode = RUNTIME
 @export var bake_grass : bool = true:
@@ -41,7 +42,7 @@ enum StorageMode {
 		bake_collision = value
 		for chunk : MarchingSquaresTerrainChunk in chunks.values():
 			chunk.mark_dirty()
-			
+
 ## The folder where this terrain's data is saved. 
 ## If left empty, it automatically fills with a folder name relative to your scene file.
 ## Note: Manually setting a path locks the save location even if you rename the terrain node later.
@@ -503,6 +504,12 @@ var is_batch_updating : bool = false
 var chunks : Dictionary = {}
 
 
+func _validate_property(property: Dictionary) -> void:
+	if property.name in ["bake_grass", "bake_collision"]:
+		if storage_mode != StorageMode.BAKED:
+			property.usage = PROPERTY_USAGE_NO_EDITOR
+
+
 func _init() -> void:
 	# Create unique copies of shared resources for this node instance
 	# This prevents texture/material changes from affecting other MarchingSquaresTerrain nodes
@@ -547,7 +554,7 @@ func _deferred_enter_tree() -> void:
 	# This is needed because _init() creates fresh duplicated materials that don't have
 	# the terrain's saved texture values - only the base resource defaults
 	force_batch_update()
-				
+	
 	for chunk in get_children():
 		if chunk is MarchingSquaresTerrainChunk:
 			chunks[chunk.chunk_coords] = chunk
@@ -711,15 +718,15 @@ func _ensure_textures() -> void:
 	
 	if terrain_material.get_shader_parameter("vc_tex_aa") == null:
 		terrain_material.set_shader_parameter("vc_tex_aa", void_texture)
-		
+	
 	if grass_mat.get_shader_parameter("wind_texture") == null:
 		grass_mat.set_shader_parameter("wind_texture", placeholder_wind_texture)
 	if terrain_material.get_shader_parameter("rl_noise_texture") == null:
 		terrain_material.set_shader_parameter("rl_noise_texture", placeholder_rl_noise_texture)
 
 
-# Applies all shader parameters and regenerates grass once
-# Call this after setting is_batch_updating = true and changing properties
+## Applies all shader parameters and regenerates grass once
+## Call this after setting is_batch_updating = true and changing properties
 func force_batch_update() -> void:
 	var grass_mat := grass_mesh.material as ShaderMaterial
 	
@@ -804,8 +811,8 @@ func force_batch_update() -> void:
 		chunk.grass_planter.regenerate_all_cells()
 
 
-# Syncs and saves current UI texture values to the given preset resource
-# Called by marching_squares_ui.gd when saving monitoring settings changes
+## Syncs and saves current UI texture values to the given preset resource
+## Called by marching_squares_ui.gd when saving monitoring settings changes
 func save_to_preset() -> void:
 	if current_texture_preset == null:
 		# Don't print an error here as not having a preset just means the user is making a new one
