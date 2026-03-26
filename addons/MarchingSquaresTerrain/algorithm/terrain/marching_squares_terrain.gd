@@ -289,37 +289,37 @@ enum StorageMode {
 #endregion
 
 #region grass textures
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_sprite_tex_1 : CompressedTexture2D = preload("uid://cxvnfgy865wsk"):
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_sprite_tex_1 : Texture2D = preload("uid://cxvnfgy865wsk"):
 	set(value):
 		grass_sprite_tex_1 = value
 		if not is_batch_updating:
 			var grass_mat := grass_mesh.material as ShaderMaterial
 			grass_mat.set_shader_parameter("grass_texture_1", value)
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_sprite_tex_2 : CompressedTexture2D = preload("uid://cxvnfgy865wsk"):
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_sprite_tex_2 : Texture2D = preload("uid://cxvnfgy865wsk"):
 	set(value):
 		grass_sprite_tex_2 = value
 		if not is_batch_updating:
 			var grass_mat := grass_mesh.material as ShaderMaterial
 			grass_mat.set_shader_parameter("grass_texture_2", value)
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_sprite_tex_3 : CompressedTexture2D = preload("uid://cxvnfgy865wsk"):
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_sprite_tex_3 : Texture2D = preload("uid://cxvnfgy865wsk"):
 	set(value):
 		grass_sprite_tex_3 = value
 		if not is_batch_updating:
 			var grass_mat := grass_mesh.material as ShaderMaterial
 			grass_mat.set_shader_parameter("grass_texture_3", value)
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_sprite_tex_4 : CompressedTexture2D = preload("uid://cxvnfgy865wsk"):
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_sprite_tex_4 : Texture2D = preload("uid://cxvnfgy865wsk"):
 	set(value):
 		grass_sprite_tex_4 = value
 		if not is_batch_updating:
 			var grass_mat := grass_mesh.material as ShaderMaterial
 			grass_mat.set_shader_parameter("grass_texture_4", value)
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_sprite_tex_5 : CompressedTexture2D = preload("uid://cxvnfgy865wsk"):
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_sprite_tex_5 : Texture2D = preload("uid://cxvnfgy865wsk"):
 	set(value):
 		grass_sprite_tex_5 = value
 		if not is_batch_updating:
 			var grass_mat := grass_mesh.material as ShaderMaterial
 			grass_mat.set_shader_parameter("grass_texture_5", value)
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_sprite_tex_6 : CompressedTexture2D = preload("uid://cxvnfgy865wsk"):
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_sprite_tex_6 : Texture2D = preload("uid://cxvnfgy865wsk"):
 	set(value):
 		grass_sprite_tex_6 = value
 		if not is_batch_updating:
