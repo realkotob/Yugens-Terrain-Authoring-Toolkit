@@ -784,12 +784,12 @@ func force_batch_update() -> void:
 	terrain_material.set_shader_parameter("tex_scale_15", texture_scale_15)
 	
 	# GRASS MATERIAL - Grass Textures 
-	grass_mat.set_shader_parameter("grass_tex_1", grass_sprite_tex_1)
-	grass_mat.set_shader_parameter("grass_tex_2", grass_sprite_tex_2)
-	grass_mat.set_shader_parameter("grass_tex_3", grass_sprite_tex_3)
-	grass_mat.set_shader_parameter("grass_tex_4", grass_sprite_tex_4)
-	grass_mat.set_shader_parameter("grass_tex_5", grass_sprite_tex_5)
-	grass_mat.set_shader_parameter("grass_tex_6", grass_sprite_tex_6)
+	grass_mat.set_shader_parameter("grass_texture_1", grass_sprite_tex_1)
+	grass_mat.set_shader_parameter("grass_texture_2", grass_sprite_tex_2)
+	grass_mat.set_shader_parameter("grass_texture_3", grass_sprite_tex_3)
+	grass_mat.set_shader_parameter("grass_texture_4", grass_sprite_tex_4)
+	grass_mat.set_shader_parameter("grass_texture_5", grass_sprite_tex_5)
+	grass_mat.set_shader_parameter("grass_texture_6", grass_sprite_tex_6)
 	
 	# GRASS MATERIAL - Grass Colors 
 	grass_mat.set_shader_parameter("grass_color_1", texture_albedo_1)
