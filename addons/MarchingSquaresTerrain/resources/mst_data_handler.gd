@@ -44,6 +44,35 @@ static func generate_data_directory(terrain: MarchingSquaresTerrain) -> String:
 	return scene_dir.path_join(scene_name + "_TerrainData").path_join(terrain.name + "_" + generate_terrain_uid())
 
 
+static func copy_recursive(from_path: String, to_path: String) -> void:
+	var dir := DirAccess.open(from_path)
+	if dir == null:
+		push_error("Cannot open source directory: " + from_path)
+		return
+	
+	DirAccess.make_dir_recursive_absolute(to_path)
+	
+	dir.list_dir_begin()
+	var file_name = dir.get_next()
+	
+	while file_name != "":
+		if file_name == "." or file_name == "..":
+			file_name = dir.get_next()
+			continue
+		
+		var src = from_path.path_join(file_name)
+		var dst = to_path.path_join(file_name)
+		
+		if dir.current_is_dir():
+			copy_recursive(src, dst)
+		else:
+			var err = DirAccess.copy_absolute(src, dst)
+			if err != OK:
+				push_error("Failed to copy file: %s -> %s" % [src, dst])
+		file_name = dir.get_next()
+	dir.list_dir_end()
+
+
 ## Check if a terrains data directory is unique
 static func is_data_directory_unique(terrain: MarchingSquaresTerrain) -> bool:
 	if not (EngineWrapper.instance.is_editor() and terrain.is_inside_tree()):

@@ -532,10 +532,17 @@ func _enter_tree() -> void:
 
 
 func _initialize_data_directory() -> void:
-	if EngineWrapper.instance.is_editor() and (data_directory.is_empty() or not MSTDataHandler.is_data_directory_unique(self)):
+	var copy_from_dir := ""
+	if EngineWrapper.instance.is_editor() and not data_directory.is_empty() and not MSTDataHandler.is_data_directory_unique(self):
+		copy_from_dir = data_directory
+		data_directory = ""
+	
+	if EngineWrapper.instance.is_editor() and (data_directory.is_empty()):
 		var auto_path := MSTDataHandler.generate_data_directory(self)
 		if not auto_path.is_empty():
 			data_directory = auto_path
+	if copy_from_dir:
+		MSTDataHandler.copy_recursive(copy_from_dir, data_directory)
 
 
 func _deferred_enter_tree() -> void:
