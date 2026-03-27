@@ -577,6 +577,7 @@ func _deferred_enter_tree() -> void:
 	# This is needed because _init() creates fresh duplicated materials that don't have
 	# the terrain's saved texture values - only the base resource defaults
 	force_batch_update()
+	grass_size = grass_size
 	
 	load_finished.emit()
 
