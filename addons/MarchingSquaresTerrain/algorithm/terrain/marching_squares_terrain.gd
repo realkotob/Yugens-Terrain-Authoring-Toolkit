@@ -27,6 +27,7 @@ enum StorageMode {
 				for chunk in chunks.values():
 					chunk.mark_dirty()
 			print_verbose("[MST] Storage mode changed. All chunks marked for save.")
+		notify_property_list_changed()
 
 ## If true, storage will include grass data, ignored if storage_mode = RUNTIME
 @export var bake_grass : bool = true:
@@ -41,7 +42,7 @@ enum StorageMode {
 		bake_collision = value
 		for chunk : MarchingSquaresTerrainChunk in chunks.values():
 			chunk.mark_dirty()
-			
+
 ## The folder where this terrain's data is saved. 
 ## If left empty, it automatically fills with a folder name relative to your scene file.
 ## Note: Manually setting a path locks the save location even if you rename the terrain node later.
@@ -288,37 +289,37 @@ enum StorageMode {
 #endregion
 
 #region grass textures
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_sprite_tex_1 : CompressedTexture2D = preload("uid://cxvnfgy865wsk"):
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_sprite_tex_1 : Texture2D = preload("uid://cxvnfgy865wsk"):
 	set(value):
 		grass_sprite_tex_1 = value
 		if not is_batch_updating:
 			var grass_mat := grass_mesh.material as ShaderMaterial
 			grass_mat.set_shader_parameter("grass_texture_1", value)
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_sprite_tex_2 : CompressedTexture2D = preload("uid://cxvnfgy865wsk"):
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_sprite_tex_2 : Texture2D = preload("uid://cxvnfgy865wsk"):
 	set(value):
 		grass_sprite_tex_2 = value
 		if not is_batch_updating:
 			var grass_mat := grass_mesh.material as ShaderMaterial
 			grass_mat.set_shader_parameter("grass_texture_2", value)
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_sprite_tex_3 : CompressedTexture2D = preload("uid://cxvnfgy865wsk"):
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_sprite_tex_3 : Texture2D = preload("uid://cxvnfgy865wsk"):
 	set(value):
 		grass_sprite_tex_3 = value
 		if not is_batch_updating:
 			var grass_mat := grass_mesh.material as ShaderMaterial
 			grass_mat.set_shader_parameter("grass_texture_3", value)
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_sprite_tex_4 : CompressedTexture2D = preload("uid://cxvnfgy865wsk"):
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_sprite_tex_4 : Texture2D = preload("uid://cxvnfgy865wsk"):
 	set(value):
 		grass_sprite_tex_4 = value
 		if not is_batch_updating:
 			var grass_mat := grass_mesh.material as ShaderMaterial
 			grass_mat.set_shader_parameter("grass_texture_4", value)
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_sprite_tex_5 : CompressedTexture2D = preload("uid://cxvnfgy865wsk"):
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_sprite_tex_5 : Texture2D = preload("uid://cxvnfgy865wsk"):
 	set(value):
 		grass_sprite_tex_5 = value
 		if not is_batch_updating:
 			var grass_mat := grass_mesh.material as ShaderMaterial
 			grass_mat.set_shader_parameter("grass_texture_5", value)
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_sprite_tex_6 : CompressedTexture2D = preload("uid://cxvnfgy865wsk"):
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_sprite_tex_6 : Texture2D = preload("uid://cxvnfgy865wsk"):
 	set(value):
 		grass_sprite_tex_6 = value
 		if not is_batch_updating:
@@ -503,6 +504,12 @@ var is_batch_updating : bool = false
 var chunks : Dictionary = {}
 
 
+func _validate_property(property: Dictionary) -> void:
+	if property.name in ["bake_grass", "bake_collision"]:
+		if storage_mode != StorageMode.BAKED:
+			property.usage = PROPERTY_USAGE_NO_EDITOR
+
+
 func _init() -> void:
 	# Create unique copies of shared resources for this node instance
 	# This prevents texture/material changes from affecting other MarchingSquaresTerrain nodes
@@ -511,7 +518,7 @@ func _init() -> void:
 	grass_mesh = base_grass_mesh.duplicate(true)
 	grass_mesh.material = base_grass_mesh.material.duplicate(true)
 	print_verbose("Last storage mode: ", _last_storage_mode)
-	
+
 
 func _notification(what: int) -> void:
 	# Save all dirty chunks to external storage before scene save
@@ -525,10 +532,17 @@ func _enter_tree() -> void:
 
 
 func _initialize_data_directory() -> void:
-	if EngineWrapper.instance.is_editor() and (data_directory.is_empty() or not MSTDataHandler.is_data_directory_unique(self)):
+	var copy_from_dir := ""
+	if EngineWrapper.instance.is_editor() and not data_directory.is_empty() and not MSTDataHandler.is_data_directory_unique(self):
+		copy_from_dir = data_directory
+		data_directory = ""
+	
+	if EngineWrapper.instance.is_editor() and (data_directory.is_empty()):
 		var auto_path := MSTDataHandler.generate_data_directory(self)
 		if not auto_path.is_empty():
 			data_directory = auto_path
+	if copy_from_dir:
+		MSTDataHandler.copy_recursive(copy_from_dir, data_directory)
 
 
 func _deferred_enter_tree() -> void:
@@ -542,12 +556,6 @@ func _deferred_enter_tree() -> void:
 			if chunk._data_dirty:
 				return
 	chunks.clear()
-	
-	# Apply all persisted textures/colors to this terrain's unique shader materials
-	# This is needed because _init() creates fresh duplicated materials that don't have
-	# the terrain's saved texture values - only the base resource defaults
-	force_batch_update()
-				
 	for chunk in get_children():
 		if chunk is MarchingSquaresTerrainChunk:
 			chunks[chunk.chunk_coords] = chunk
@@ -564,6 +572,13 @@ func _deferred_enter_tree() -> void:
 	# Initialize all chunks (regenerate mesh/grass from loaded data)
 	for chunk : MarchingSquaresTerrainChunk in chunks.values():
 		chunk.initialize_terrain(true)
+		
+	# Apply all persisted textures/colors to this terrain's unique shader materials
+	# This is needed because _init() creates fresh duplicated materials that don't have
+	# the terrain's saved texture values - only the base resource defaults
+	force_batch_update()
+	grass_size = grass_size
+	
 	load_finished.emit()
 
 
@@ -666,10 +681,10 @@ func add_chunk(coords: Vector2i, chunk: MarchingSquaresTerrainChunk, plugin, reg
 		plugin.ui.tool_attributes.show_tool_attributes(plugin.TerrainToolMode.CHUNK_MANAGEMENT)
 		plugin.gizmo_plugin.trigger_redraw(self)
 
-
 #region texture (set) functions
 
-# This function is mainly there to ensure the plugin works on startup in a new project
+# WARNING: this function is currently not being used anymore. [Q] Yūgen: was that intentional?
+# This (legacy) function is mainly there to ensure the plugin works on startup in a new project
 func _ensure_textures() -> void:
 	var grass_mat := grass_mesh.material as ShaderMaterial
 	if not grass_mat.get_shader_parameter("use_base_color_1") and terrain_material.get_shader_parameter("vc_tex_rr") == null:
@@ -711,15 +726,15 @@ func _ensure_textures() -> void:
 	
 	if terrain_material.get_shader_parameter("vc_tex_aa") == null:
 		terrain_material.set_shader_parameter("vc_tex_aa", void_texture)
-		
+	
 	if grass_mat.get_shader_parameter("wind_texture") == null:
 		grass_mat.set_shader_parameter("wind_texture", placeholder_wind_texture)
 	if terrain_material.get_shader_parameter("rl_noise_texture") == null:
 		terrain_material.set_shader_parameter("rl_noise_texture", placeholder_rl_noise_texture)
 
 
-# Applies all shader parameters and regenerates grass once
-# Call this after setting is_batch_updating = true and changing properties
+## Applies all shader parameters and regenerates grass once
+## Call this after setting is_batch_updating = true and changing properties
 func force_batch_update() -> void:
 	var grass_mat := grass_mesh.material as ShaderMaterial
 	
@@ -770,12 +785,12 @@ func force_batch_update() -> void:
 	terrain_material.set_shader_parameter("tex_scale_15", texture_scale_15)
 	
 	# GRASS MATERIAL - Grass Textures 
-	grass_mat.set_shader_parameter("grass_tex_1", grass_sprite_tex_1)
-	grass_mat.set_shader_parameter("grass_tex_2", grass_sprite_tex_2)
-	grass_mat.set_shader_parameter("grass_tex_3", grass_sprite_tex_3)
-	grass_mat.set_shader_parameter("grass_tex_4", grass_sprite_tex_4)
-	grass_mat.set_shader_parameter("grass_tex_5", grass_sprite_tex_5)
-	grass_mat.set_shader_parameter("grass_tex_6", grass_sprite_tex_6)
+	grass_mat.set_shader_parameter("grass_texture_1", grass_sprite_tex_1)
+	grass_mat.set_shader_parameter("grass_texture_2", grass_sprite_tex_2)
+	grass_mat.set_shader_parameter("grass_texture_3", grass_sprite_tex_3)
+	grass_mat.set_shader_parameter("grass_texture_4", grass_sprite_tex_4)
+	grass_mat.set_shader_parameter("grass_texture_5", grass_sprite_tex_5)
+	grass_mat.set_shader_parameter("grass_texture_6", grass_sprite_tex_6)
 	
 	# GRASS MATERIAL - Grass Colors 
 	grass_mat.set_shader_parameter("grass_color_1", texture_albedo_1)
@@ -799,13 +814,10 @@ func force_batch_update() -> void:
 	grass_mat.set_shader_parameter("use_grass_tex_4", tex4_has_grass)
 	grass_mat.set_shader_parameter("use_grass_tex_5", tex5_has_grass)
 	grass_mat.set_shader_parameter("use_grass_tex_6", tex6_has_grass)
-	
-	for chunk: MarchingSquaresTerrainChunk in chunks.values():
-		chunk.grass_planter.regenerate_all_cells()
 
 
-# Syncs and saves current UI texture values to the given preset resource
-# Called by marching_squares_ui.gd when saving monitoring settings changes
+## Syncs and saves current UI texture values to the given preset resource
+## Called by marching_squares_ui.gd when saving monitoring settings changes
 func save_to_preset() -> void:
 	if current_texture_preset == null:
 		# Don't print an error here as not having a preset just means the user is making a new one

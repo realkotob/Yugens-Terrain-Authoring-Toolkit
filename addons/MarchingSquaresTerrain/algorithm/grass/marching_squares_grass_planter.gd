@@ -53,8 +53,6 @@ func regenerate_all_cells() -> void:
 	for z in range(terrain_system.dimensions.z-1):
 		for x in range(terrain_system.dimensions.x-1):
 			generate_grass_on_cell(Vector2i(x, z))
-	
-	multimesh.mesh.center_offset.y = multimesh.mesh.size.y / 2 # Stops floating grass bug on startup
 
 
 func generate_grass_on_cell(cell_coords: Vector2i) -> void:
@@ -327,6 +325,7 @@ func _create_grass_instance(index: int, world_pos: Vector3, a: Vector3, b: Vecto
 	var instance_basis := Basis(right, forward, -normal)
 	
 	multimesh.set_instance_transform(index, Transform3D(instance_basis, world_pos))
+	multimesh.mesh.center_offset.y = multimesh.mesh.size.y / 2
 	
 	var tex_scale := _get_texture_scale(texture_id)
 	var instance_color := _sample_terrain_texture_color(world_pos, texture_id, tex_scale)
