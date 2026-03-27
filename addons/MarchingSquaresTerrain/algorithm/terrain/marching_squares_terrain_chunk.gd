@@ -131,6 +131,8 @@ func initialize_terrain(should_regenerate_mesh: bool = true):
 	if not mesh and should_regenerate_mesh:
 		regenerate_mesh(true)
 	elif mesh:
+		if terrain_system:
+			mesh.surface_set_material(0, terrain_system.terrain_material)
 		if not _temp_collision_shapes.is_empty():
 			_recreate_collision_body()
 		else:

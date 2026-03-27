@@ -518,7 +518,7 @@ func _init() -> void:
 	grass_mesh = base_grass_mesh.duplicate(true)
 	grass_mesh.material = base_grass_mesh.material.duplicate(true)
 	print_verbose("Last storage mode: ", _last_storage_mode)
-	
+
 
 func _notification(what: int) -> void:
 	# Save all dirty chunks to external storage before scene save
@@ -681,10 +681,10 @@ func add_chunk(coords: Vector2i, chunk: MarchingSquaresTerrainChunk, plugin, reg
 		plugin.ui.tool_attributes.show_tool_attributes(plugin.TerrainToolMode.CHUNK_MANAGEMENT)
 		plugin.gizmo_plugin.trigger_redraw(self)
 
-
 #region texture (set) functions
 
-# This function is mainly there to ensure the plugin works on startup in a new project
+# WARNING: this function is currently not being used anymore. [Q] Yūgen: was that intentional?
+# This (legacy) function is mainly there to ensure the plugin works on startup in a new project
 func _ensure_textures() -> void:
 	var grass_mat := grass_mesh.material as ShaderMaterial
 	if not grass_mat.get_shader_parameter("use_base_color_1") and terrain_material.get_shader_parameter("vc_tex_rr") == null:
