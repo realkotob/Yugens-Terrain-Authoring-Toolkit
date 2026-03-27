@@ -28,7 +28,13 @@ static func assert_array_equal(ts: GdUnitTestSuite, a: PackedFloat32Array, b: Pa
 		ts.assert_bool(eq).append_failure_message(ctx).is_true()
 		if not eq:
 			return
-
+			
+static func assert_color_equals(ts: GdUnitTestSuite, a: Color, b: Color) -> void:
+	var ctx := get_last_calls_as_string()
+	ts.assert_int(a.r8).append_failure_message(ctx).is_equal(b.r8)
+	ts.assert_int(a.g8).append_failure_message(ctx).is_equal(b.g8)
+	ts.assert_int(a.b8).append_failure_message(ctx).is_equal(b.b8)
+	ts.assert_int(a.a8).append_failure_message(ctx).is_equal(b.a8)
 
 static func collect_components(ts: GdUnitTestSuite, terrain: MarchingSquaresTerrain) -> Dictionary:
 	var chunk := terrain.get_node("Chunk (0, 0)") as MarchingSquaresTerrainChunk

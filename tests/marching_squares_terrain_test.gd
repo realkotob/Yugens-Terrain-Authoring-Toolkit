@@ -25,20 +25,115 @@ func test_saving() -> void:
 	
 	comp = MSTTestUtils.collect_components(self, terrain)
 	
-	_check_geometry_grass_and_coliders(comp)
+	_check_geometry_grass_and_coliders(terrain, comp)
 	await _simulate_tab_switch(root, terrain)
 	## Nothing is changed and reloaded after tab-switch
-	_check_geometry_grass_and_coliders(comp)
+	_check_geometry_grass_and_coliders(terrain, comp)
 	
 	# Emit a save notification, to store geometry
 	terrain._notification(NOTIFICATION_EDITOR_PRE_SAVE)
 	
+	await get_tree().process_frame
+	var terrain_loaded := _mk_terrain_node()
+
+	# If the terrain has no reference no data will be loaded
+	# Usually these are saved in the scene file
+	terrain_loaded.add_new_chunk(0,0, null)
+	terrain_loaded.chunks[Vector2i(0,0)]._data_dirty = false
+	terrain_loaded.data_directory = terrain.data_directory
+	terrain_loaded._storage_initialized = true
+	
+	root.add_child(terrain_loaded)
+	await get_tree().process_frame
+	
+	_test_load(root, terrain_loaded, false, false, false, false)
+	
 	terrain.free()
+	terrain_loaded.free()
+	
+
+func test_terrain_params_applied_to_grass() -> void:
+	var root := _mk_mock_editor("res://tests/tmp/mock.tscn")
+	var terrain := _mk_terrain_node()
+	# If the terrain has no reference no data will be loaded
+	# Usually these are saved in the scene file
+	terrain.add_new_chunk(0,0, null)
+	terrain.chunks[Vector2i(0,0)]._data_dirty = false
+	terrain.data_directory = "res://"
+	terrain._storage_initialized = true
+	
+	terrain.texture_albedo_1 = Color.RED
+	terrain.texture_albedo_2 = Color.BLUE
+	terrain.texture_albedo_3 = Color.GREEN
+	terrain.texture_albedo_4 = Color.WHITE
+	terrain.texture_albedo_5 = Color.BLACK
+	terrain.texture_albedo_6 = Color.AQUA
+	
+	terrain.texture_1 = NoiseTexture2D.new()
+	terrain.texture_2 = NoiseTexture2D.new()
+	terrain.texture_3 = NoiseTexture2D.new()
+	terrain.texture_4 = NoiseTexture2D.new()
+	terrain.texture_5 = NoiseTexture2D.new()
+	terrain.texture_6 = NoiseTexture2D.new()
+	terrain.texture_7 = NoiseTexture2D.new()
+	terrain.texture_8 = NoiseTexture2D.new()
+	terrain.texture_9 = NoiseTexture2D.new()
+	terrain.texture_10 = NoiseTexture2D.new()
+	terrain.texture_11 = NoiseTexture2D.new()
+	terrain.texture_12 = NoiseTexture2D.new()
+	terrain.texture_13 = NoiseTexture2D.new()
+	terrain.texture_14 = NoiseTexture2D.new()
+	terrain.texture_15 = NoiseTexture2D.new()
+	
+	terrain.grass_sprite_tex_1 = NoiseTexture2D.new()
+	terrain.grass_sprite_tex_2 = NoiseTexture2D.new()
+	terrain.grass_sprite_tex_3 = NoiseTexture2D.new()
+	terrain.grass_sprite_tex_4 = NoiseTexture2D.new()
+	terrain.grass_sprite_tex_5 = NoiseTexture2D.new()
+	terrain.grass_sprite_tex_6 = NoiseTexture2D.new()
+	
+	root.add_child(terrain)
+	await terrain.load_finished
+	
+	var comp := MSTTestUtils.collect_components(self, terrain)
+	var mm := comp.grass.multimesh as MultiMesh
+	var grass_material := mm.mesh.surface_get_material(0) as ShaderMaterial
+	
+	var material := terrain.terrain_material
+	
+	MSTTestUtils.assert_color_equals(self, grass_material.get_shader_parameter("grass_color_1"), terrain.texture_albedo_1)
+	MSTTestUtils.assert_color_equals(self, grass_material.get_shader_parameter("grass_color_2"), terrain.texture_albedo_2)
+	MSTTestUtils.assert_color_equals(self, grass_material.get_shader_parameter("grass_color_3"), terrain.texture_albedo_3)
+	MSTTestUtils.assert_color_equals(self, grass_material.get_shader_parameter("grass_color_4"), terrain.texture_albedo_4)
+	MSTTestUtils.assert_color_equals(self, grass_material.get_shader_parameter("grass_color_5"), terrain.texture_albedo_5)
+	MSTTestUtils.assert_color_equals(self, grass_material.get_shader_parameter("grass_color_6"), terrain.texture_albedo_6)
+	
+	assert_that(grass_material.get_shader_parameter("grass_texture_1")).is_equal(terrain.grass_sprite_tex_1)
+	assert_that(grass_material.get_shader_parameter("grass_texture_2")).is_equal(terrain.grass_sprite_tex_2)
+	assert_that(grass_material.get_shader_parameter("grass_texture_3")).is_equal(terrain.grass_sprite_tex_3)
+	assert_that(grass_material.get_shader_parameter("grass_texture_4")).is_equal(terrain.grass_sprite_tex_4)
+	assert_that(grass_material.get_shader_parameter("grass_texture_5")).is_equal(terrain.grass_sprite_tex_5)
+	assert_that(grass_material.get_shader_parameter("grass_texture_6")).is_equal(terrain.grass_sprite_tex_6)
+	
+	assert_that(material.get_shader_parameter("vc_tex_rr")).is_equal(terrain.texture_1)
+	assert_that(material.get_shader_parameter("vc_tex_rg")).is_equal(terrain.texture_2)
+	assert_that(material.get_shader_parameter("vc_tex_rb")).is_equal(terrain.texture_3)
+	assert_that(material.get_shader_parameter("vc_tex_ra")).is_equal(terrain.texture_4)
+	assert_that(material.get_shader_parameter("vc_tex_gr")).is_equal(terrain.texture_5)
+	assert_that(material.get_shader_parameter("vc_tex_gg")).is_equal(terrain.texture_6)
+	assert_that(material.get_shader_parameter("vc_tex_gb")).is_equal(terrain.texture_7)
+	assert_that(material.get_shader_parameter("vc_tex_ga")).is_equal(terrain.texture_8)
+	assert_that(material.get_shader_parameter("vc_tex_br")).is_equal(terrain.texture_9)
+	assert_that(material.get_shader_parameter("vc_tex_bg")).is_equal(terrain.texture_10)
+	assert_that(material.get_shader_parameter("vc_tex_bb")).is_equal(terrain.texture_11)
+	assert_that(material.get_shader_parameter("vc_tex_ba")).is_equal(terrain.texture_12)
+	assert_that(material.get_shader_parameter("vc_tex_ar")).is_equal(terrain.texture_13)
+	assert_that(material.get_shader_parameter("vc_tex_ag")).is_equal(terrain.texture_14)
+	assert_that(material.get_shader_parameter("vc_tex_ab")).is_equal(terrain.texture_15)
 
 
 func test_load1() -> void:
 	_test_load_init("res://tests/terrain_data/all/", MarchingSquaresTerrain.StorageMode.BAKED, true, true, false, false, false)
-	collect_orphan_node_details()
 
 func test_load2() -> void:
 	_test_load_init("res://tests/terrain_data/geometry/", MarchingSquaresTerrain.StorageMode.BAKED, true, true, false, true, true)
@@ -88,6 +183,8 @@ func _test_load_init(data_dir: String,
 		root.add_child(terrain)
 		await get_tree().process_frame
 		
+		terrain.chunks[Vector2i(0,0)].regenerate_all_cells(true)
+		
 		_test_load(root, terrain, assert_geometry_warning, assert_grass_warning, assert_col_warning)
 		
 func test_load_tscn1() -> void:
@@ -133,12 +230,12 @@ func _test_load(
 	assert_geometry_warning: bool,
 	assert_grass_warning: bool,
 	assert_col_warning: bool,
+	free_terrain: bool = true
 	) -> void:
 	
 	var lambda := func():
 		var _comp := MSTTestUtils.collect_components(self, terrain)
 		var _chunk := _comp.chunk as MarchingSquaresTerrainChunk
-		_chunk.regenerate_all_cells(true)
 		_comp = MSTTestUtils.collect_components(self, terrain) # after regenerate, instances are invalid
 		await terrain.load_finished
 	
@@ -155,7 +252,7 @@ func _test_load(
 	
 	# Ensure baked data has been loaded/regenerated
 	var comp := MSTTestUtils.collect_components(self, terrain)
-	_check_geometry_grass_and_coliders(comp)
+	_check_geometry_grass_and_coliders(terrain, comp)
 	
 	var chunk := comp.chunk as MarchingSquaresTerrainChunk
 	for x in range(chunk.height_map.size()):
@@ -165,13 +262,14 @@ func _test_load(
 	comp = MSTTestUtils.collect_components(self, terrain)
 	
 	# The data is not reloaded, even after multiple tab-switches
-	_check_geometry_grass_and_coliders(comp, -7.0)
+	_check_geometry_grass_and_coliders(terrain, comp, -7.0)
 	_simulate_tab_switch(root, terrain)
-	_check_geometry_grass_and_coliders(comp, -7.0)
+	_check_geometry_grass_and_coliders(terrain, comp, -7.0)
 	_simulate_tab_switch(root, terrain)
-	_check_geometry_grass_and_coliders(comp, -7.0)
+	_check_geometry_grass_and_coliders(terrain, comp, -7.0)
 	
-	terrain.free()
+	if free_terrain:
+		terrain.free()
 
 
 func test_baked_grass_dissapearing() -> void:
@@ -189,17 +287,19 @@ func test_baked_grass_dissapearing() -> void:
 	root.add_child(terrain)
 	await terrain.load_finished
 	
+	terrain.chunks[Vector2i(0,0)].regenerate_all_cells(true)
+	
 	var comp := MSTTestUtils.collect_components(self, terrain)
 	var mm := comp.grass.multimesh as MultiMesh
 	var buffer_pre_bake_reload := PackedFloat32Array(mm.buffer)
 	
 	# Ensure baked data has been loaded
-	_check_geometry_grass_and_coliders(comp)
+	_check_geometry_grass_and_coliders(terrain, comp)
 	
 	await _simulate_tab_switch(root, terrain)
 	
 	var comp_after_after_bake_reload := MSTTestUtils.collect_components(self, terrain)
-	_check_geometry_grass_and_coliders(comp_after_after_bake_reload)
+	_check_geometry_grass_and_coliders(terrain, comp_after_after_bake_reload)
 	
 	mm = comp_after_after_bake_reload.grass.multimesh
 	MSTTestUtils.assert_array_equal(self, buffer_pre_bake_reload, mm.buffer)
@@ -231,9 +331,18 @@ func _mk_terrain_node(storage_mode: MarchingSquaresTerrain.StorageMode = Marchin
 	return terrain
 
 
-func _check_geometry_grass_and_coliders(comp: Dictionary, y_values: float = 7.0) -> void:
+func _check_geometry_grass_and_coliders(terrain: MarchingSquaresTerrain, comp: Dictionary, y_values: float = 7.0) -> void:
 	var ctx := MSTTestUtils.get_last_calls_as_string()
 	var mm := comp.grass.multimesh as MultiMesh
+	var grass_material := mm.mesh.surface_get_material(0) as ShaderMaterial
+	
+	MSTTestUtils.assert_color_equals(self, grass_material.get_shader_parameter("grass_color_1"), terrain.texture_albedo_1)
+	MSTTestUtils.assert_color_equals(self, grass_material.get_shader_parameter("grass_color_2"), terrain.texture_albedo_2)
+	MSTTestUtils.assert_color_equals(self, grass_material.get_shader_parameter("grass_color_3"), terrain.texture_albedo_3)
+	MSTTestUtils.assert_color_equals(self, grass_material.get_shader_parameter("grass_color_4"), terrain.texture_albedo_4)
+	MSTTestUtils.assert_color_equals(self, grass_material.get_shader_parameter("grass_color_5"), terrain.texture_albedo_5)
+	MSTTestUtils.assert_color_equals(self, grass_material.get_shader_parameter("grass_color_6"), terrain.texture_albedo_6)
+	
 	assert_int(mm.instance_count).is_greater(10)
 	MSTTestUtils.assert_multi_mesh_y_values(self, mm, y_values)
 	

@@ -110,11 +110,13 @@ func initialize_terrain(should_regenerate_mesh: bool = true):
 			grass_planter = get_node_or_null("GrassPlanter")
 		grass_planter.terrain_system = terrain_system
 		grass_planter._chunk = self
-		
+	
 	if _temp_grass_multimesh:
 		grass_planter.multimesh = _temp_grass_multimesh
 	if not grass_planter.multimesh:
 		grass_planter.setup(self)
+		grass_planter.regenerate_all_cells()
+	grass_planter.multimesh.mesh = terrain_system.grass_mesh
 	
 	# Generate maps if not loaded from external storage (works for both editor and runtime)
 	if not height_map:
@@ -129,6 +131,8 @@ func initialize_terrain(should_regenerate_mesh: bool = true):
 	if not mesh and should_regenerate_mesh:
 		regenerate_mesh(true)
 	elif mesh:
+		if terrain_system:
+			mesh.surface_set_material(0, terrain_system.terrain_material)
 		if not _temp_collision_shapes.is_empty():
 			_recreate_collision_body()
 		else:
@@ -229,12 +233,14 @@ func _notification(what: int) -> void:
 					for shape_child in child.get_children():
 						if shape_child is CollisionShape3D:
 							shape_child.owner = null
-							
+
+
 func _enter_tree() -> void:
 	if get_parent() != terrain_system:
 		push_error("Chunk must remain within its parent!")
 	terrain_system.chunks[chunk_coords] = self
-			
+
+
 func _exit_tree() -> void:
 	# Clear temp references
 	_temp_height_map = []
