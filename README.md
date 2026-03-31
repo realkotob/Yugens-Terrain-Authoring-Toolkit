@@ -27,6 +27,13 @@ Watch the [YouTube](https://www.youtube.com/playlist?list=PLXcmz5ZRdiyTpf_Jk9gGN
 ## Known Issues
 
 1. Smooth texture blending breaks at certain elevated/lowered cell edge cases
+2. d3d12 doesn't load terrain material properly when in game on some devices
+
+## PR Workflow
+
+Please target and base your PR's on `public-testing` instead of `main` otherwise we cannot review or aprove them!
+
+Also make sure to give a good description of what your PR fixes or adds so we don't have to go through all the files unnecessarily.
 
 ## Credits
 
