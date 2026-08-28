@@ -1,7 +1,7 @@
 # Yūgen's Terrain Authoring Toolkit
 The public version of the Marching Squares Terrain plugin for godot.
 
-This project is an effort to create a simple to use and powerfull terrain authoring tool inside godot aimed at 3d pixel art games. However, the plugin featured in this project can be used for a wide variety of games and experimentation is encouraged! As of right now the plugin has the following features:
+This project is an effort to create a simple to use and powerfull terrain authoring tool inside godot aimed at level based small to medium sized stylized 3d games. However, the plugin featured in this project can be used for a wide variety of games and experimentation is encouraged! As of right now the plugin has the following features:
 
 * Elevate and lower terrain based on cells in a chunk grid
 * Level terrain to a user-set height
@@ -27,6 +27,20 @@ Watch the [YouTube](https://www.youtube.com/playlist?list=PLXcmz5ZRdiyTpf_Jk9gGN
 ## Known Issues
 
 1. Smooth texture blending breaks at certain elevated/lowered cell edge cases
+2. d3d12 doesn't load terrain material properly when in game on some devices -> set the renderer to vulkan for the time being if possible on your device
+3. Some maps turn black or white in game
+
+## Supported Pipelines
+
+As of right now the plugin only supports `Forward+` and limited `Compatibility` rendering with both `Mobile` and `Web` rendering not supported.
+
+Which one you should use is dependent on your personal project but also your GPU as some GPU's work better with `Forward+` than `Compatibility`.
+
+## PR Workflow
+
+Please target and base your PR's on `public-testing` instead of `main` otherwise we cannot review or aprove them!
+
+Also make sure to give a good description of what your PR fixes or adds so we don't have to go through all the files unnecessarily.
 
 ## Credits
 

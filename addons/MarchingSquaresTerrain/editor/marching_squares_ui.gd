@@ -50,7 +50,7 @@ func _enter_tree() -> void:
 
 
 func _deferred_enter_tree() -> void:
-	if not Engine.is_editor_hint():
+	if not EngineWrapper.instance.is_editor():
 		push_error("Attempt to load during runtime (NOT SUPPORTED IN CURRENT BUILD)")
 		return
 	
@@ -172,10 +172,15 @@ func _on_setting_changed(p_setting_name: String, p_value: Variant) -> void:
 				plugin.current_texture_preset.new_tex_names.texture_names = new_preset_names
 			tool_attributes.show_tool_attributes(active_tool)
 		"texture_preset":
+			plugin.current_terrain_node.is_batch_updating = true
 			if p_value is MarchingSquaresTexturePreset:
 				plugin.current_texture_preset = p_value
 			else:
 				plugin.current_texture_preset = null
+			plugin.current_terrain_node.force_batch_update()
+			plugin.current_terrain_node.is_batch_updating = false
+			for chunk: MarchingSquaresTerrainChunk in plugin.current_terrain_node.chunks.values():
+				chunk.mark_dirty()
 			# Rebuild tool attributes to refresh Quick Paint dropdown
 			tool_attributes.show_tool_attributes(active_tool)
 		"quick_paint_selection":

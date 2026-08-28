@@ -6,12 +6,6 @@ extends RefCounted
 
 const ChunkData = preload("res://addons/MarchingSquaresTerrain/resources/mst_chunk_data.gd")
 
-# Configuration for BAKED mode
-# If true, these components will be saved to disk. If false, they are generated at runtime.
-const BAKE_COLLISION : bool = false
-const BAKE_GRASS : bool = false
-
-
 ## Generate a unique terrain ID (called once on first save).
 static func generate_terrain_uid() -> String:
 	return "%08x" % (randi() ^ int(Time.get_unix_time_from_system()))
@@ -38,8 +32,8 @@ static func generate_data_directory(terrain: MarchingSquaresTerrain) -> String:
 	var tree := terrain.get_tree()
 	if not tree:
 		return ""  # Node not in scene tree yet
-	
-	var scene_root := tree.edited_scene_root if Engine.is_editor_hint() else tree.current_scene
+	var inst := EngineWrapper.instance
+	var scene_root := inst.get_root_for_node(terrain)
 	if not scene_root or scene_root.scene_file_path.is_empty():
 		return ""
 	
@@ -50,11 +44,40 @@ static func generate_data_directory(terrain: MarchingSquaresTerrain) -> String:
 	return scene_dir.path_join(scene_name + "_TerrainData").path_join(terrain.name + "_" + generate_terrain_uid())
 
 
+static func copy_recursive(from_path: String, to_path: String) -> void:
+	var dir := DirAccess.open(from_path)
+	if dir == null:
+		push_error("Cannot open source directory: " + from_path)
+		return
+	
+	DirAccess.make_dir_recursive_absolute(to_path)
+	
+	dir.list_dir_begin()
+	var file_name = dir.get_next()
+	
+	while file_name != "":
+		if file_name == "." or file_name == "..":
+			file_name = dir.get_next()
+			continue
+		
+		var src = from_path.path_join(file_name)
+		var dst = to_path.path_join(file_name)
+		
+		if dir.current_is_dir():
+			copy_recursive(src, dst)
+		else:
+			var err = DirAccess.copy_absolute(src, dst)
+			if err != OK:
+				push_error("Failed to copy file: %s -> %s" % [src, dst])
+		file_name = dir.get_next()
+	dir.list_dir_end()
+
+
 ## Check if a terrains data directory is unique
 static func is_data_directory_unique(terrain: MarchingSquaresTerrain) -> bool:
-	if not (Engine.is_editor_hint() and terrain.is_inside_tree()):
+	if not (EngineWrapper.instance.is_editor() and terrain.is_inside_tree()):
 		return true
-	var scene_root := terrain.get_tree().edited_scene_root
+	var scene_root := EngineWrapper.instance.get_root_for_node(terrain)
 	var dirs := _collect_terrain_dirs_recursive(scene_root)
 
 	var simplified_path := terrain.data_directory.simplify_path()
@@ -145,10 +168,10 @@ static func save_chunk_resources(terrain: MarchingSquaresTerrain, chunk: Marchin
 	if not is_baked_mode:
 		data.mesh = null
 	
-	if not is_baked_mode or not BAKE_GRASS:
+	if not is_baked_mode or not terrain.bake_grass:
 		data.grass_multimesh = null
 	
-	if not is_baked_mode or not BAKE_COLLISION:
+	if not is_baked_mode or not terrain.bake_collision:
 		data.collision_faces = PackedVector3Array()
 	
 	var metadata_path := chunk_dir.path_join("metadata.res")
@@ -244,10 +267,10 @@ static func export_chunk_data(chunk: MarchingSquaresTerrainChunk) -> MSTChunkDat
 	# Ephemeral data for BAKED mode
 	data.mesh = chunk.mesh
 	
-	if BAKE_GRASS and chunk.grass_planter:
+	if chunk.terrain_system.bake_grass and chunk.grass_planter:
 		data.grass_multimesh = chunk.grass_planter.multimesh
 	
-	if BAKE_COLLISION:
+	if chunk.terrain_system.bake_collision:
 		# Find collision shape
 		for child in chunk.get_children():
 			if child is StaticBody3D:
@@ -283,6 +306,14 @@ static func import_chunk_data(chunk: MarchingSquaresTerrainChunk, data: MSTChunk
 	# Restore baked assets if present
 	if data.mesh:
 		chunk.mesh = data.mesh
+	elif chunk.terrain_system.storage_mode == MarchingSquaresTerrain.StorageMode.BAKED:
+		push_warning("Baking enabled, but terrain-resource does not contain mesh data")
+		
+	if chunk.terrain_system.bake_grass and not data.grass_multimesh:
+		push_warning("Grass baking enabled, but terrain-resource does not contain grass data")
+	
+	if chunk.terrain_system.bake_collision and data.collision_faces.is_empty():
+		push_warning("Collision baking enabled, but terrain-resource does not contain collision data")
 	
 	if data.grass_multimesh:
 		chunk._temp_grass_multimesh = data.grass_multimesh
@@ -477,7 +508,7 @@ static func cleanup_orphaned_terrain_directories(terrain: MarchingSquaresTerrain
 	if not tree:
 		return
 	
-	var scene_root := tree.edited_scene_root if Engine.is_editor_hint() else tree.current_scene
+	var scene_root := EngineWrapper.instance.get_root_for_node(terrain)
 	if not scene_root or scene_root.scene_file_path.is_empty():
 		return
 	

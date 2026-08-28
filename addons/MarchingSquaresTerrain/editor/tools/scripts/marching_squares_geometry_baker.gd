@@ -6,7 +6,7 @@ class_name MarchingSquaresGeometryBaker
 signal finished(mesh: Mesh, original: MeshInstance3D, img: Image)
 
 @export var polygon_texture_resolution : int = 32
-
+static var MAX_TEXTURE_SIZE := 4096
 
 func bake_geometry_texture(inst: MeshInstance3D, scene_tree: SceneTree) -> void:
 	if not inst or not scene_tree or not inst.mesh is ArrayMesh:
@@ -51,7 +51,13 @@ func bake_geometry_texture(inst: MeshInstance3D, scene_tree: SceneTree) -> void:
 	var tris_per_row := (atlas_res / polygon_texture_resolution) * 2
 	
 	var num_of_triangles := indices.size()/3
-	var max_texture_size := RenderingServer.get_rendering_device().limit_get(RenderingDevice.LIMIT_MAX_TEXTURE_SIZE_2D)
+	var rd := RenderingServer.get_rendering_device()
+	var max_texture_size : int
+	if rd:
+		max_texture_size = rd.limit_get(RenderingDevice.LIMIT_MAX_TEXTURE_SIZE_2D)
+	else:
+		max_texture_size = MAX_TEXTURE_SIZE
+	
 	while tris_per_row * tris_per_row/2 < num_of_triangles:
 		atlas_res *= 2
 		tris_per_row = atlas_res / polygon_texture_resolution * 2
@@ -236,13 +242,12 @@ func bake_geometry_texture(inst: MeshInstance3D, scene_tree: SceneTree) -> void:
 	
 	cam.add_child(bake_inst)
 	
-	await scene_tree.process_frame
-	await scene_tree.process_frame
-	
-	var img := viewport.get_texture().get_image()
-	
-	finished.emit(new_mesh, inst, img)
-	viewport.queue_free()
+	RenderingServer.frame_post_draw.connect(func():
+		var img := viewport.get_texture().get_image()
+		
+		finished.emit(new_mesh, inst, img)
+		viewport.queue_free()
+	, CONNECT_ONE_SHOT)
 	@warning_ignore_restore("integer_division")
 
 

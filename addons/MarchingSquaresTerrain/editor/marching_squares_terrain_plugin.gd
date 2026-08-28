@@ -163,7 +163,7 @@ func _safe_initialize() -> bool:
 	if is_initialized:
 		return true
 	
-	if not Engine.is_editor_hint():
+	if not EngineWrapper.instance.is_editor():
 		initialization_error = "Plugin was initialized during runtime"
 		return false
 	
@@ -250,6 +250,10 @@ func _physics_process(delta: float) -> void:
 	
 	queued_ray_result = space_state.intersect_ray(query)
 
+
+func _on_chunk_dimensions_changed(value: Vector3i):
+	brush_size *= ((value.x / 33) + (value.y / 33)) / 2.0
+
 #region input-handlers
 
 func _edit(object: Object) -> void:
@@ -262,6 +266,8 @@ func _edit(object: Object) -> void:
 		if ui:
 			ui.set_visible(true)
 			current_terrain_node = object
+			if not current_terrain_node.chunk_dimensions_changed.is_connected(_on_chunk_dimensions_changed):
+				current_terrain_node.chunk_dimensions_changed.connect(_on_chunk_dimensions_changed)
 			
 			# Sync plugin's preset from the selected terrain's saved preset
 			# This ensures each terrain keeps its own preset on selection/reload
@@ -474,7 +480,7 @@ func handle_mouse(camera: Camera3D, event: InputEvent) -> int:
 				var removed_chunk = terrain.chunks[chunk_coords]
 				get_undo_redo().create_action("remove chunk")
 				get_undo_redo().add_do_method(terrain, "remove_chunk_from_tree", chunk_x, chunk_z, self)
-				get_undo_redo().add_undo_method(terrain, "add_chunk", chunk_coords, self, removed_chunk)
+				get_undo_redo().add_undo_method(terrain, "add_chunk", chunk_coords, removed_chunk, self)
 				get_undo_redo().commit_action()
 				return EditorPlugin.AFTER_GUI_INPUT_STOP
 			
